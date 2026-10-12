@@ -1,10 +1,5 @@
 # 🏎️ Apex Grid Store — F1-Themed Point of Sale (POS) System
 
-![PHP Version](https://img.shields.io/badge/PHP-8.x-777BB4?style=flat-square&logo=php)
-![MySQL](https://img.shields.io/badge/MySQL-Database-4479A1?style=flat-square&logo=mysql)
-![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3?style=flat-square&logo=bootstrap)
-![License](https://img.shields.io/badge/License-MIT-red?style=flat-square)
-
 **Apex Grid Store** adalah sistem Kasir & Manajemen Toko (Point of Sale) modern berbasis web yang dirancang khusus dengan antarmuka bertema **Formula 1**. Sistem ini mengimplementasikan **Role-Based Access Control (RBAC)** ketat untuk membatasi hak akses pengguna serta mengoptimalkan performa data menggunakan **SQL Views**.
 
 ---
@@ -27,10 +22,10 @@
 
 ## 🛠️ Tumpukan Teknologi (Tech Stack)
 
-- **Backend**: PHP 8.x (Native / Procedural with Structural Architecture)
+- **Backend**: PHP Native / Procedural with Structural Architecture
 - **Database**: MySQL (Foreign Key Constraints & SQL Views)
-- **Frontend Framework**: Bootstrap 5.3
-- **Iconography**: Bootstrap Icons & FontAwesome 6
+- **Frontend Framework**: Bootstrap 5
+- **Iconography**: Bootstrap Icons & FontAwesome
 - **Typography**: Google Fonts (Poppins)
 
 ---
