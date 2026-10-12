@@ -1,0 +1,49 @@
+/* Styling Khusus Apex Grid Store - F1 Theme */
+body {
+    background-color: #0f1115;
+    color: #e1e6ed;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.navbar-f1 {
+    background: linear-gradient(90deg, #e10600 0%, #15151e 100%);
+    border-bottom: 2px solid #e10600;
+}
+
+.card-f1 {
+    background-color: #1a1d24;
+    border: 1px solid #2a2e39;
+    border-radius: 8px;
+}
+
+.table-f1 {
+    color: #e1e6ed;
+    background-color: #1a1d24;
+}
+
+.table-f1 thead {
+    background-color: #e10600;
+    color: #ffffff;
+    border-color: #e10600;
+}
+
+.table-f1 td, .table-f1 th {
+    border-color: #2a2e39;
+    vertical-align: middle;
+}
+
+.btn-f1-red {
+    background-color: #e10600;
+    color: #ffffff;
+    border: none;
+    font-weight: 600;
+}
+
+.btn-f1-red:hover {
+    background-color: #b80500;
+    color: #ffffff;
+}
+
+.text-f1-red {
+    color: #e10600;
+}
