@@ -14,28 +14,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = mysqli_real_escape_string($conn, $_POST['username']);
     $password = $_POST['password'];
 
-    $query = "SELECT u.iduser, u.username, u.nama_user, u.foto, r.nama_role 
-          FROM user u
-          JOIN role r ON u.idrole = r.idrole
-          WHERE u.username = '$username' 
-            AND u.password = SHA2('$password', 256)";
+    // 1. Ambil kolom u.password juga untuk diverifikasi oleh password_verify()
+    $query = "SELECT u.iduser, u.username, u.nama_user, u.foto, u.password, r.nama_role 
+              FROM user u
+              JOIN role r ON u.idrole = r.idrole
+              WHERE u.username = '$username'";
 
-$result = mysqli_query($conn, $query);
+    $result = mysqli_query($conn, $query);
 
-if ($result && mysqli_num_rows($result) === 1) {
-    $user_data = mysqli_fetch_assoc($result);
-    
-    $_SESSION['user'] = [
-        'iduser'   => $user_data['iduser'],
-        'username' => $user_data['username'],
-        'nama'     => $user_data['nama_user'] ?? $user_data['username'],
-        'foto'     => $user_data['foto'],
-        'role'     => $user_data['nama_role']
-    ];
+    if ($result && mysqli_num_rows($result) === 1) {
+        $user_data = mysqli_fetch_assoc($result);
+        
+        // 2. Verifikasi password mentah dari form dengan hash Bcrypt di database
+        if (password_verify($password, $user_data['password'])) {
+            $_SESSION['user'] = [
+                'iduser'   => $user_data['iduser'],
+                'username' => $user_data['username'],
+                'nama'     => $user_data['nama_user'] ?? $user_data['username'],
+                'foto'     => $user_data['foto'],
+                'role'     => $user_data['nama_role']
+            ];
 
-    header("Location: index.php");
-    exit();
-} else {
+            header("Location: index.php");
+            exit();
+        } else {
+            $error = "Username atau password salah!";
+        }
+    } else {
         $error = "Username atau password salah!";
     }
 }

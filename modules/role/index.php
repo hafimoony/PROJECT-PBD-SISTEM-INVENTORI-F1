@@ -8,7 +8,7 @@ if (!in_array($_SESSION['user']['role'], ['Administrator', 'Auditor'])) {
     exit();
 }
 
-$query = "SELECT * FROM role ORDER BY idrole ASC";
+$query = "SELECT * FROM v_master_role ORDER BY idrole ASC";
 $result = mysqli_query($conn, $query);
 ?>
 

@@ -1,10 +1,17 @@
 <?php
+
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 require_once '../../config/database.php';
 
 $action = $_GET['action'] ?? '';
 
 if (!in_array($_SESSION['user']['role'], ['Administrator', 'Staf Pengadaan', 'Auditor'])) {
-    echo "<script>alert('Akses Ditolak! Anda tidak memiliki izin ke modul Vendor.'); window.location.href='../../index.php';</script>";
+    echo "<script>
+        alert('Akses Ditolak! Anda tidak memiliki izin ke modul Vendor.'); window.location.href='../../index.php';
+        </script>";
     exit();
 }
 

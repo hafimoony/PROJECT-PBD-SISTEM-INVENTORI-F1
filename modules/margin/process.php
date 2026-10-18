@@ -15,16 +15,23 @@ if ($action == 'create') {
     $persen = (float)$_POST['persen'];
     $status = (int)$_POST['status'];
 
+    // ambil id user dari session user yang sedang login
+    $iduser = $_SESSION['user']['iduser'] ?? null;
+
+    if(!$iduser) {
+        echo "<script>alert('Session terputus! Silakan login kembali.'); window.location.href='../../login.php';</script>";
+        exit();
+    }
+
     // Jika set ke Aktif, non-aktifkan margin lainnya terlebih dahulu
     if ($status == 1) {
         mysqli_query($conn, "UPDATE margin_penjualan SET status = 0");
     }
 
-    $query = "INSERT INTO margin_penjualan (persen, status, created_at) VALUES ('$persen', '$status', NOW())";
+    $query = "INSERT INTO margin_penjualan (persen, status, iduser, created_at) VALUES ('$persen', '$status', '$iduser', NOW())";
 
     if (mysqli_query($conn, $query)) {
-        header("Location: index.php");
-        exit();
+        echo "<script>alert('Margin berhasil ditambahkan!'); window.location.href='index.php';</script>";
     } else {
         echo "Error Insert Margin: " . mysqli_error($conn);
     }
@@ -43,8 +50,7 @@ if ($action == 'create') {
     $query = "UPDATE margin_penjualan SET persen = '$persen', status = '$status' WHERE idmargin_penjualan = '$idmargin'";
 
     if (mysqli_query($conn, $query)) {
-        header("Location: index.php");
-        exit();
+        echo "<script>alert('Margin berhasil diperbarui!'); window.location.href='index.php';</script>";
     } else {
         echo "Error Update Margin: " . mysqli_error($conn);
     }
@@ -60,8 +66,7 @@ if ($action == 'create') {
     $query = "UPDATE margin_penjualan SET status = 1 WHERE idmargin_penjualan = '$idmargin'";
 
     if (mysqli_query($conn, $query)) {
-        header("Location: index.php");
-        exit();
+        echo "<script>alert('Margin berhasil diaktifkan!'); window.location.href='index.php';</script>";
     } else {
         echo "Error Activation Margin: " . mysqli_error($conn);
     }
@@ -73,13 +78,12 @@ if ($action == 'create') {
     $query = "DELETE FROM margin_penjualan WHERE idmargin_penjualan = '$idmargin'";
 
     if (mysqli_query($conn, $query)) {
-        header("Location: index.php");
-        exit();
+        echo "<script>alert('Margin berhasil dihapus!'); window.location.href='index.php';</script>";
     } else {
         echo "Error Delete Margin: " . mysqli_error($conn);
     }
 } else {
-    header("Location: index.php");
+    echo "<script>alert('Aksi tidak valid!'); window.location.href='index.php';</script>";
     exit();
 }
 ?>

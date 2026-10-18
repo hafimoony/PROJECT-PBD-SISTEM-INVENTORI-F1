@@ -3,7 +3,7 @@ require_once '../../config/database.php';
 include '../../includes/header.php';
 
 $iduser = $_SESSION['user']['iduser'] ?? 0;
-$query = "SELECT u.*, r.nama_role FROM user u LEFT JOIN role r ON u.idrole = r.idrole WHERE u.iduser = '$iduser'";
+$query = "SELECT * FROM v_master_user WHERE iduser = '$iduser'";
 $result = mysqli_query($conn, $query);
 $user = mysqli_fetch_assoc($result);
 
