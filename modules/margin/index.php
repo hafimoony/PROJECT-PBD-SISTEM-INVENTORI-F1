@@ -7,7 +7,7 @@ if (!in_array($_SESSION['user']['role'], ['Administrator', 'Manajer Gudang', 'Au
     exit();
 }
 
-$query = "SELECT * FROM margin_penjualan ORDER BY idmargin_penjualan DESC";
+$query = "SELECT * FROM v_master_margin ORDER BY idmargin_penjualan DESC";
 $result = mysqli_query($conn, $query);
 ?>
 
