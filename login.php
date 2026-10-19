@@ -62,6 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             display: flex;
             align-items: center;
             justify-content: center;
+            font-family: 'Poppins', sans-serif;
         }
         .login-card {
             background-color: #151821;
@@ -71,6 +72,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             box-shadow: 0 10px 30px rgba(0,0,0,0.6);
             width: 100%;
             max-width: 400px;
+        }
+        /* Custom Styling Tombol F1 Red */
+        .btn-f1-red {
+            background-color: #e10600;
+            color: #ffffff;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        .btn-f1-red:hover {
+            background-color: #b80500;
+            color: #ffffff;
+            box-shadow: 0 0 15px rgba(225, 6, 0, 0.4);
         }
     </style>
 </head>
@@ -106,9 +119,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
 
-        <button type="submit" class="btn btn-f1-red w-100 py-2 fw-bold">
+        <button type="submit" class="btn btn-f1-red w-100 py-2 fw-bold rounded">
             <i class="fa-solid fa-right-to-bracket me-2"></i> MASUK KE SYSTEM
         </button>
+
+        <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-secondary border-opacity-25">
+            <a href="forgot_password.php" class="text-secondary small text-decoration-none">Lupa Password?</a>
+            <a href="register.php" class="text-danger small text-decoration-none fw-bold">Daftar Akun Baru</a>
+        </div>
     </form>
 </div>
 
