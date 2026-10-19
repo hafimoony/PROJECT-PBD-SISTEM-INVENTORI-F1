@@ -2,7 +2,7 @@
 require_once '../../config/database.php';
 include '../../includes/header.php';
 
-// Proteksi Akses: Hanya Administrator dan Auditor yang boleh melihat daftar Role
+// Proteksi Akses
 if (!in_array($_SESSION['user']['role'], ['Administrator', 'Auditor'])) {
     echo "<script>alert('Akses Ditolak! Modul ini khusus Administrator & Auditor.'); window.location.href='../../index.php';</script>";
     exit();

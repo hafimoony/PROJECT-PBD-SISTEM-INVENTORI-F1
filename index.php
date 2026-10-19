@@ -17,7 +17,7 @@ $total_omset     = mysqli_fetch_assoc(mysqli_query($conn, "SELECT SUM(total_nila
   <div class="container-fluid py-2">
     <h1 class="display-6 fw-bold">Selamat Datang di <span class="text-f1-red">APEX GRID STORE</span></h1>
     <p class="col-md-8 fs-6 text-secondary">
-      Sistem Informasi Manajemen Inventory, Pengadaan Vendor, dan Penjualan Retail Berbasis F1 Telemetry.
+      Sistem Informasi Manajemen Inventory, Pengadaan Vendor, dan Penjualan Retail F1 Merch.
     </p>
   </div>
 </div>
@@ -29,7 +29,7 @@ $total_omset     = mysqli_fetch_assoc(mysqli_query($conn, "SELECT SUM(total_nila
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h6 class="text-secondary mb-1">TOTAL TRANSAKSI PENJUALAN</h6>
-                    <h3 class="fw-bold mb-0 text-light"><?= $total_penjualan; ?> <small class="fs-6 text-secondary">Nota</small></h3>
+                    <h3 class="fw-bold mb-0 text-dark"><?= $total_penjualan; ?> <small class="fs-6 text-secondary">Nota</small></h3>
                 </div>
                 <i class="fa-solid fa-cash-register fs-1 text-danger"></i>
             </div>

@@ -2,13 +2,13 @@
 require_once '../../config/database.php';
 include '../../includes/header.php';
 
-// 1. Proteksi RBAC: Cek Akses Modul Satuan
+// Proteksi akses
 if (!in_array($_SESSION['user']['role'], ['Administrator', 'Manajer Gudang', 'Auditor'])) {
     echo "<script>alert('Akses Ditolak! Anda tidak memiliki izin ke modul Satuan.'); window.location.href='../../index.php';</script>";
     exit();
 }
 
-// 2. Eksekusi Query dari View v_master_satuan
+// Query dari View v_master_satuan
 $query = "SELECT * FROM v_master_satuan ORDER BY idsatuan DESC";
 $result = mysqli_query($conn, $query);
 ?>
