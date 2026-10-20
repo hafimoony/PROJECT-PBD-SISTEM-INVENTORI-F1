@@ -11,6 +11,13 @@ $total_satuan = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total
 // Hitung Statistik Transaksi Penjualan
 $total_penjualan = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM penjualan"))['total'] ?? 0;
 $total_omset     = mysqli_fetch_assoc(mysqli_query($conn, "SELECT SUM(total_nilai) as total FROM penjualan"))['total'] ?? 0;
+
+// Hitung Statistik Pengadaan & Kartu Stok
+$total_pengadaan = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM pengadaan"))['total'] ?? 0;
+$total_mutasi    = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM kartu_stok"))['total'] ?? 0;
+$total_penerimaan = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM penerimaan"))['total'] ?? 0;
+$total_retur      = mysqli_fetch_assoc(mysqli_query($conn, "SELECT COUNT(*) as total FROM retur"))['total'] ?? 0;
+
 ?>
 
 <div class="p-4 mb-4 rounded-3 card-f1">
@@ -49,6 +56,68 @@ $total_omset     = mysqli_fetch_assoc(mysqli_query($conn, "SELECT SUM(total_nila
             <a href="modules/penjualan/create.php" class="btn btn-sm btn-success mt-3"><i class="fa-solid fa-plus me-1"></i> Transaksi Baru &rarr;</a>
         </div>
     </div>
+</div>
+
+<!-- Grid Cards Pengadaan & Kartu Stok -->
+<div class="row g-3 mb-4">
+    <?php if (in_array($role, ['Administrator', 'Manajer Gudang', 'Staf Pengadaan', 'Auditor'])) : ?>
+    <div class="col-md-6">
+        <div class="card card-f1 p-3 border-warning">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-secondary mb-1">TOTAL TRANSAKSI PENGADAAN</h6>
+                    <h3 class="fw-bold mb-0 text-dark"><?= $total_pengadaan; ?> <small class="fs-6 text-secondary">Pengadaan</small></h3>
+                </div>
+                <i class="bi bi-boxes fs-1 text-warning"></i>
+            </div>
+            <a href="modules/pengadaan/index.php" class="btn btn-sm btn-warning text-dark mt-3 fw-bold"><i class="bi bi-box-seam me-1"></i> Kelola Pengadaan Barang &rarr;</a>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <div class="col-md-6">
+        <div class="card card-f1 p-3 border-info">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-secondary mb-1">TOTAL MUTASI STOK BARANG</h6>
+                    <h3 class="fw-bold mb-0 text-dark"><?= $total_mutasi; ?> <small class="fs-6 text-secondary">Catatan</small></h3>
+                </div>
+                <i class="bi bi-receipt fs-1 text-info"></i>
+            </div>
+            <a href="modules/kartu_stok/index.php" class="btn btn-sm btn-info text-dark mt-3 fw-bold"><i class="bi bi-journal-text me-1"></i> Lihat Kartu Stok &rarr;</a>
+        </div>
+    </div>
+</div>
+
+<!-- Grid Cards Penerimaan & Retur -->
+<div class="row g-3 mb-4">
+    <?php if (in_array($role, ['Administrator', 'Manajer Gudang', 'Staf Pengadaan', 'Auditor'])) : ?>
+    <div class="col-md-6">
+        <div class="card card-f1 p-3 border-success">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-secondary mb-1">TOTAL PENERIMAAN VENDOR</h6>
+                    <h3 class="fw-bold mb-0 text-dark"><?= $total_penerimaan; ?> <small class="fs-6 text-secondary">Nota</small></h3>
+                </div>
+                <i class="bi bi-box-arrow-in-down fs-1 text-success"></i>
+            </div>
+            <a href="modules/penerimaan/index.php" class="btn btn-sm btn-success mt-3 fw-bold"><i class="bi bi-journal-check me-1"></i> Lihat Penerimaan Barang &rarr;</a>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card card-f1 p-3 border-danger">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h6 class="text-secondary mb-1">TOTAL RETUR PEMBELIAN</h6>
+                    <h3 class="fw-bold mb-0 text-dark"><?= $total_retur; ?> <small class="fs-6 text-secondary">Transaksi</small></h3>
+                </div>
+                <i class="bi bi-arrow-return-left fs-1 text-danger"></i>
+            </div>
+            <a href="modules/retur/index.php" class="btn btn-sm btn-f1-red mt-3 fw-bold"><i class="bi bi-arrow-counterclockwise me-1"></i> Kelola Retur Barang &rarr;</a>
+        </div>
+    </div>
+    <?php endif; ?>
 </div>
 
 <!-- Grid Cards Stats Data Master -->

@@ -68,12 +68,12 @@ $details = mysqli_query($conn, $detail_query);
 
             <div class="bg-dark p-3 rounded border border-secondary mb-4 small">
                 <div class="d-flex justify-content-between mb-1">
-                    <span>Subtotal:</span>
-                    <strong>Rp <?= number_format($header['subtotal_nilai'], 0, ',', '.'); ?></strong>
+                    <span class="text-light">Subtotal:</span>
+                    <strong class="text-light">Rp <?= number_format($header['subtotal_nilai'], 0, ',', '.'); ?></strong>
                 </div>
                 <div class="d-flex justify-content-between mb-1">
-                    <span>PPN (11%):</span>
-                    <strong>Rp <?= number_format($header['ppn'], 0, ',', '.'); ?></strong>
+                    <span class="text-light">PPN (11%):</span>
+                    <strong class="text-light">Rp <?= number_format($header['ppn'], 0, ',', '.'); ?></strong>
                 </div>
                 <hr class="border-secondary my-1">
                 <div class="d-flex justify-content-between fs-6 fw-bold">

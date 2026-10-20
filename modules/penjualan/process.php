@@ -23,7 +23,12 @@ if ($action == 'create') {
         exit();
     }
 
-    // Hitung ulang Subtotal di Server Side untuk Keamanan
+    // Ambil persentase margin penjualan yang dipilih
+    $q_margin = mysqli_query($conn, "SELECT persen FROM margin_penjualan WHERE idmargin_penjualan = '$idmargin_penjualan'");
+    $m = mysqli_fetch_assoc($q_margin);
+    $persen_margin = $m ? (float)$m['persen'] : 10;
+
+    // Hitung ulang Subtotal di Server Side
     $subtotal_nilai = 0;
     $items = [];
 
@@ -32,12 +37,14 @@ if ($action == 'create') {
         $jumlah   = (int)$jumlah_arr[$i];
 
         if ($idbarang > 0 && $jumlah > 0) {
-            // Ambil harga barang dari database
+            // Ambil harga dasar barang dari database
             $q_barang = mysqli_query($conn, "SELECT harga FROM barang WHERE idbarang = '$idbarang'");
             $b = mysqli_fetch_assoc($q_barang);
             
             if ($b) {
-                $harga_satuan = (int)$b['harga'];
+                $harga_dasar  = (int)$b['harga'];
+                // Hitung harga jual setelah ditambahkan margin
+                $harga_satuan = $harga_dasar + ($harga_dasar * ($persen_margin / 100));
                 $subtotal_item = $harga_satuan * $jumlah;
                 $subtotal_nilai += $subtotal_item;
 
@@ -55,30 +62,55 @@ if ($action == 'create') {
     $ppn = round($subtotal_nilai * 0.11);
     $total_nilai = $subtotal_nilai + $ppn;
 
-    // A. Insert ke Header Penjualan
-    $query_header = "INSERT INTO penjualan (subtotal_nilai, ppn, total_nilai, iduser, idmargin_penjualan, created_at) 
-                    VALUES ('$subtotal_nilai', '$ppn', '$total_nilai', '$iduser', '$idmargin_penjualan', NOW())";
+    // Memulai Transaksi Database
+    mysqli_begin_transaction($conn);
 
-    if (mysqli_query($conn, $query_header)) {
+    try {
+        // A. Insert ke Header Penjualan
+        $query_header = "INSERT INTO penjualan (subtotal_nilai, ppn, total_nilai, iduser, idmargin_penjualan, created_at) 
+                        VALUES ('$subtotal_nilai', '$ppn', '$total_nilai', '$iduser', '$idmargin_penjualan', NOW())";
+        
+        if (!mysqli_query($conn, $query_header)) {
+            throw new Exception("Gagal membuat header penjualan: " . mysqli_error($conn));
+        }
+
         $idpenjualan = mysqli_insert_id($conn);
 
         // B. Insert Detail Items ke detail_penjualan
         foreach ($items as $item) {
-            $idbarang = $item['idbarang'];
+            $idbarang     = $item['idbarang'];
             $harga_satuan = $item['harga_satuan'];
-            $jumlah = $item['jumlah'];
-            $subtotal = $item['subtotal'];
+            $jumlah       = $item['jumlah'];
+            $subtotal     = $item['subtotal'];
 
             $query_detail = "INSERT INTO detail_penjualan (penjualan_idpenjualan, idbarang, harga_satuan, jumlah, subtotal) 
                             VALUES ('$idpenjualan', '$idbarang', '$harga_satuan', '$jumlah', '$subtotal')";
-            mysqli_query($conn, $query_detail);
+            
+            // Baris ini akan mengeksekusi Trigger tr_cek_stok_sebelum_jual di MySQL!
+            if (!mysqli_query($conn, $query_detail)) {
+                throw new Exception(mysqli_error($conn));
+            }
         }
+
+        // Commit jika seluruh item berhasil di-insert
+        mysqli_commit($conn);
 
         // Redirect langsung ke Struk Detail
         header("Location: detail.php?id=" . $idpenjualan);
         exit();
-    } else {
-        echo "Error Transaksi: " . mysqli_error($conn);
+
+    } catch (Exception $e) {
+        // Rollback transaksi jika terjadi error/stok kurang
+        mysqli_rollback($conn);
+
+        $pesan_error = addslashes($e->getMessage());
+
+        // Tampilkan pesan error Trigger sebagai Pop-up Notifikasi & kembalikan ke create.php
+        echo "<script>
+            alert('$pesan_error');
+            window.location.href = 'create.php';
+        </script>";
+        exit();
     }
 } else {
     header("Location: index.php");

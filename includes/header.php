@@ -166,6 +166,42 @@ $role = $_SESSION['user']['role'] ?? '';
                 </li>
                 <?php endif; ?>
 
+                <!-- Menu Pengadaan (Procurement) -->
+                <?php if (in_array($role, ['Administrator', 'Manajer Gudang', 'Staf Pengadaan', 'Auditor'])) : ?>
+                <li class="nav-item me-2">
+                    <a class="nav-link" href="http://localhost:8000/modules/pengadaan/index.php">
+                        <i class="bi bi-boxes text-danger me-1"></i> Pengadaan
+                    </a>
+                </li>
+                <?php endif; ?>
+
+                <!-- Menu Penerimaan -->
+                <?php if (in_array($role, ['Administrator', 'Manajer Gudang', 'Staf Pengadaan', 'Auditor'])) : ?>
+                <li class="nav-item me-2">
+                    <a class="nav-link" href="http://localhost:8000/modules/penerimaan/index.php">
+                        <i class="bi bi-box-arrow-in-down text-danger me-1"></i> Penerimaan
+                    </a>
+                </li>
+                <?php endif; ?>
+
+                <!-- Menu Retur -->
+                <?php if (in_array($role, ['Administrator', 'Manajer Gudang', 'Staf Pengadaan', 'Auditor'])) : ?>
+                <li class="nav-item me-2">
+                    <a class="nav-link" href="http://localhost:8000/modules/retur/index.php">
+                        <i class="bi bi-arrow-return-left text-danger me-1"></i> Retur
+                    </a>
+                </li>
+                <?php endif; ?>
+
+                <!-- Menu Kartu Stok (Stock Ledger) -->
+                <?php if (in_array($role, ['Administrator', 'Manajer Gudang', 'Kasir / Staf Penjualan', 'Staf Pengadaan', 'Auditor'])) : ?>
+                <li class="nav-item me-2">
+                    <a class="nav-link" href="http://localhost:8000/modules/kartu_stok/index.php">
+                        <i class="bi bi-receipt text-danger me-1"></i> Kartu Stok
+                    </a>
+                </li>
+                <?php endif; ?>
+
                 <?php if (in_array($role, ['Administrator', 'Manajer Gudang', 'Auditor'])) : ?>
                 <li class="nav-item dropdown me-2">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
