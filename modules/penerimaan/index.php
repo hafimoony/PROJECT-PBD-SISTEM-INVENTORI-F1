@@ -45,18 +45,20 @@ $result = mysqli_query($conn, $query);
                     <td class="text-center fw-semibold"><?= $row['jumlah_pesan']; ?> <?= $row['nama_satuan']; ?></td>
                     <td class="text-center"><span class="badge bg-success">+<?= $row['jumlah_terima']; ?> <?= $row['nama_satuan']; ?></span></td>
                     <td class="text-center">
-                        <?php if ($row['sisa_kurang'] > 0): ?>
+                        <?php if (intval($row['sisa_kurang']) > 0): ?>
                             <span class="badge bg-warning text-dark">-<?= $row['sisa_kurang']; ?> <?= $row['nama_satuan']; ?></span>
                         <?php else: ?>
                             <span class="badge bg-secondary">Lunas / Terpenuhi</span>
                         <?php endif; ?>
                     </td>
                     <td>
-                        <span class="badge bg-<?= $row['status_penerimaan'] === 'S' ? 'success' : 'danger'; ?>">
-                            <?= $row['status_text']; ?>
-                        </span>
+                        <?php if (intval($row['sisa_kurang']) <= 0) : ?>
+                            <span class="badge bg-success">Selesai (Full)</span>
+                        <?php else : ?>
+                            <span class="badge bg-danger">Parsial (Sebagian)</span>
+                        <?php endif; ?>
                     </td>
-                    <td><?= htmlspecialchars($row['nama_user']); ?></td>
+                    <td><?= htmlspecialchars($row['nama_user'] ?? '-'); ?></td>
                 </tr>
                 <?php endwhile; ?>
             <?php else : ?>
