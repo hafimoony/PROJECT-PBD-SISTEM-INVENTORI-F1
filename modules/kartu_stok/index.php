@@ -3,7 +3,7 @@ require_once '../../config/database.php';
 include '../../includes/header.php';
 
 // Proteksi Akses
-if (!in_array($_SESSION['user']['role'], ['Administrator', 'Manajer Gudang', 'Kasir / Staf Penjualan', 'Staf Pengadaan', 'Auditor'])) {
+if (!in_array($_SESSION['user']['role'], ['Administrator', 'Manajer Gudang', 'Kasir / Staf Penjualan', 'Staf Pengadaan', 'Auditor', 'Master Admin'])) {
     echo "<script>alert('Akses Ditolak!'); window.location.href='../../index.php';</script>";
     exit();
 }

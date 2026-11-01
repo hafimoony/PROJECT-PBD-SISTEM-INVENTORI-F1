@@ -25,7 +25,7 @@ $role = $_SESSION['user']['role'] ?? '';
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     
-    <!-- Bootstrap Icons (Sangat Stabil) -->
+    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
     <style>
@@ -78,7 +78,7 @@ $role = $_SESSION['user']['role'] ?? '';
             font-size: 0.95rem;
         }
 
-        /* Styling Card & Table Biar Rapi Konsisten */
+        /* Styling Card & Table */
         .card-f1 {
             background: #ffffff;
             border: none;
@@ -145,7 +145,8 @@ $role = $_SESSION['user']['role'] ?? '';
                     </a>
                 </li>
 
-                <?php if (in_array($role, ['Administrator', 'Manajer Gudang', 'Staf Pengadaan', 'Auditor'])) : ?>
+                <!-- Menu Data Master -->
+                <?php if (in_array($role, ['Master Admin', 'Administrator', 'Manajer Gudang', 'Staf Pengadaan', 'Auditor'])) : ?>
                 <li class="nav-item dropdown me-2">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="bi bi-database text-danger me-1"></i> Data Master
@@ -158,7 +159,8 @@ $role = $_SESSION['user']['role'] ?? '';
                 </li>
                 <?php endif; ?>
 
-                <?php if (in_array($role, ['Administrator', 'Kasir / Staf Penjualan', 'Auditor'])) : ?>
+                <!-- Menu Penjualan (POS) -->
+                <?php if (in_array($role, ['Master Admin', 'Administrator', 'Kasir / Staf Penjualan', 'Auditor'])) : ?>
                 <li class="nav-item me-2">
                     <a class="nav-link" href="http://localhost:8000/modules/penjualan/index.php">
                         <i class="bi bi-cart-check text-danger me-1"></i> Penjualan (POS)
@@ -166,8 +168,8 @@ $role = $_SESSION['user']['role'] ?? '';
                 </li>
                 <?php endif; ?>
 
-                <!-- Menu Pengadaan (Procurement) -->
-                <?php if (in_array($role, ['Administrator', 'Manajer Gudang', 'Staf Pengadaan', 'Auditor'])) : ?>
+                <!-- Menu Pengadaan -->
+                <?php if (in_array($role, ['Master Admin', 'Administrator', 'Manajer Gudang', 'Staf Pengadaan', 'Auditor'])) : ?>
                 <li class="nav-item me-2">
                     <a class="nav-link" href="http://localhost:8000/modules/pengadaan/index.php">
                         <i class="bi bi-boxes text-danger me-1"></i> Pengadaan
@@ -176,7 +178,7 @@ $role = $_SESSION['user']['role'] ?? '';
                 <?php endif; ?>
 
                 <!-- Menu Penerimaan -->
-                <?php if (in_array($role, ['Administrator', 'Manajer Gudang', 'Staf Pengadaan', 'Auditor'])) : ?>
+                <?php if (in_array($role, ['Master Admin', 'Administrator', 'Manajer Gudang', 'Staf Pengadaan', 'Auditor'])) : ?>
                 <li class="nav-item me-2">
                     <a class="nav-link" href="http://localhost:8000/modules/penerimaan/index.php">
                         <i class="bi bi-box-arrow-in-down text-danger me-1"></i> Penerimaan
@@ -185,7 +187,7 @@ $role = $_SESSION['user']['role'] ?? '';
                 <?php endif; ?>
 
                 <!-- Menu Retur -->
-                <?php if (in_array($role, ['Administrator', 'Manajer Gudang', 'Staf Pengadaan', 'Auditor'])) : ?>
+                <?php if (in_array($role, ['Master Admin', 'Administrator', 'Manajer Gudang', 'Staf Pengadaan', 'Auditor'])) : ?>
                 <li class="nav-item me-2">
                     <a class="nav-link" href="http://localhost:8000/modules/retur/index.php">
                         <i class="bi bi-arrow-return-left text-danger me-1"></i> Retur
@@ -193,8 +195,8 @@ $role = $_SESSION['user']['role'] ?? '';
                 </li>
                 <?php endif; ?>
 
-                <!-- Menu Kartu Stok (Stock Ledger) -->
-                <?php if (in_array($role, ['Administrator', 'Manajer Gudang', 'Kasir / Staf Penjualan', 'Staf Pengadaan', 'Auditor'])) : ?>
+                <!-- Menu Kartu Stok -->
+                <?php if (in_array($role, ['Master Admin', 'Administrator', 'Manajer Gudang', 'Kasir / Staf Penjualan', 'Staf Pengadaan', 'Auditor'])) : ?>
                 <li class="nav-item me-2">
                     <a class="nav-link" href="http://localhost:8000/modules/kartu_stok/index.php">
                         <i class="bi bi-receipt text-danger me-1"></i> Kartu Stok
@@ -202,7 +204,8 @@ $role = $_SESSION['user']['role'] ?? '';
                 </li>
                 <?php endif; ?>
 
-                <?php if (in_array($role, ['Administrator', 'Manajer Gudang', 'Auditor'])) : ?>
+                <!-- Menu Pengaturan -->
+                <?php if (in_array($role, ['Master Admin', 'Administrator', 'Manajer Gudang', 'Auditor'])) : ?>
                 <li class="nav-item dropdown me-2">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="bi bi-sliders text-danger me-1"></i> Pengaturan
@@ -210,7 +213,7 @@ $role = $_SESSION['user']['role'] ?? '';
                     <ul class="dropdown-menu dropdown-menu-dark-f1">
                         <li><a class="dropdown-item" href="http://localhost:8000/modules/margin/index.php"><i class="bi bi-percent me-2 text-danger"></i> Margin Penjualan</a></li>
                         
-                        <?php if (in_array($role, ['Administrator', 'Auditor'])) : ?>
+                        <?php if (in_array($role, ['Master Admin', 'Administrator', 'Auditor'])) : ?>
                             <li><a class="dropdown-item" href="http://localhost:8000/modules/user/index.php"><i class="bi bi-people me-2 text-danger"></i> Manajemen User</a></li>
                             <li><a class="dropdown-item" href="http://localhost:8000/modules/role/index.php"><i class="bi bi-shield-lock me-2 text-danger"></i> Manajemen Role</a></li>
                         <?php endif; ?>
@@ -219,7 +222,7 @@ $role = $_SESSION['user']['role'] ?? '';
                 <?php endif; ?>
             </ul>
 
-            <!-- Dropdown Profil User -->
+            <!-- Profil User -->
             <div class="d-flex align-items-center">
                 <div class="dropdown">
                     <a href="#" class="d-flex align-items-center text-light text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">

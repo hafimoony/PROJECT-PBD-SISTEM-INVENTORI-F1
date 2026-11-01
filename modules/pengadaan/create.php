@@ -2,8 +2,8 @@
 require_once '../../config/database.php';
 include '../../includes/header.php';
 
-// Proteksi Akses (Hanya Admin, Manajer Gudang, dan Staf Pengadaan)
-if (!in_array($_SESSION['user']['role'], ['Administrator', 'Manajer Gudang', 'Staf Pengadaan'])) {
+// Proteksi Akses (Administrator, Manajer Gudang, Staf Pengadaan, dan Master Admin)
+if (!in_array($_SESSION['user']['role'], ['Administrator', 'Manajer Gudang', 'Staf Pengadaan', 'Master Admin'])) {
     echo "<script>alert('Akses Ditolak!'); window.location.href='index.php';</script>";
     exit();
 }
@@ -12,19 +12,19 @@ $error   = '';
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $iduser       = $_SESSION['user']['iduser'];
+    $iduser       = intval($_SESSION['user']['iduser']);
     $idvendor     = intval($_POST['idvendor']);
     $idbarang     = intval($_POST['idbarang']);
     $jumlah       = intval($_POST['jumlah']);
     $harga_satuan = intval($_POST['harga_satuan']);
 
     if ($idvendor > 0 && $idbarang > 0 && $jumlah > 0 && $harga_satuan > 0) {
-        // Eksekusi Stored Procedure sp_restock_barang
+        // Memanggil Stored Procedure sp_restock_barang
         $stmt = mysqli_prepare($conn, "CALL sp_restock_barang(?, ?, ?, ?, ?)");
         mysqli_stmt_bind_param($stmt, "iiiii", $iduser, $idvendor, $idbarang, $jumlah, $harga_satuan);
 
         if (mysqli_stmt_execute($stmt)) {
-            $success = "Restock barang berhasil disimpan & Kartu Stok diperbarui secara otomatis!";
+            $success = "Dokumen pengadaan barang berhasil dibuat! Menunggu proses penerimaan barang vendor.";
         } else {
             $error = "Gagal memproses pengadaan: " . mysqli_error($conn);
         }
@@ -34,26 +34,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Data Dropdown Vendor & Barang
-$vendors = mysqli_query($conn, "SELECT idvendor, nama_vendor FROM vendor WHERE status = 'A'");
-$barangs = mysqli_query($conn, "SELECT idbarang, nama, harga FROM barang WHERE status = 1");
+// Data Dropdown Vendor & Barang (Disesuaikan ke b.nama dan status A / 1)
+$vendors = mysqli_query($conn, "SELECT idvendor, nama_vendor FROM vendor WHERE status = 'A' OR status = '1' ORDER BY nama_vendor ASC");
+$barangs = mysqli_query($conn, "SELECT idbarang, nama, harga FROM barang WHERE status = 'A' OR status = '1' ORDER BY nama ASC");
 ?>
 
 <div class="row justify-content-center">
     <div class="col-md-6">
         <div class="card card-f1 p-4">
             <div class="d-flex align-items-center mb-3">
-                <h4 class="m-0"><i class="bi bi-box-seam text-danger me-2"></i> Form Restock Barang</h4>
+                <h4 class="m-0"><i class="bi bi-box-seam text-danger me-2"></i> Form Pengadaan Barang (Restock)</h4>
             </div>
             <hr class="mt-1 mb-4">
 
             <?php if ($error): ?>
-                <div class="alert alert-danger py-2 mb-3"><?= $error; ?></div>
+                <div class="alert alert-danger py-2 mb-3"><?= htmlspecialchars($error); ?></div>
             <?php endif; ?>
 
             <?php if ($success): ?>
                 <div class="alert alert-success py-2 mb-3">
-                    <?= $success; ?> <a href="index.php" class="alert-link">Lihat Riwayat</a>
+                    <?= $success; ?> <a href="index.php" class="alert-link">Lihat Riwayat Pengadaan</a>
                 </div>
             <?php endif; ?>
 
@@ -62,9 +62,11 @@ $barangs = mysqli_query($conn, "SELECT idbarang, nama, harga FROM barang WHERE s
                     <label class="form-label fw-semibold">Vendor Supplier</label>
                     <select name="idvendor" class="form-select" required>
                         <option value="">-- Pilih Vendor --</option>
-                        <?php while ($v = mysqli_fetch_assoc($vendors)): ?>
-                            <option value="<?= $v['idvendor']; ?>"><?= htmlspecialchars($v['nama_vendor']); ?></option>
-                        <?php endwhile; ?>
+                        <?php if ($vendors && mysqli_num_rows($vendors) > 0) : ?>
+                            <?php while ($v = mysqli_fetch_assoc($vendors)): ?>
+                                <option value="<?= $v['idvendor']; ?>"><?= htmlspecialchars($v['nama_vendor']); ?></option>
+                            <?php endwhile; ?>
+                        <?php endif; ?>
                     </select>
                 </div>
 
@@ -72,11 +74,13 @@ $barangs = mysqli_query($conn, "SELECT idbarang, nama, harga FROM barang WHERE s
                     <label class="form-label fw-semibold">Nama Barang</label>
                     <select name="idbarang" id="selectBarang" class="form-select" onchange="updateHargaAuto()" required>
                         <option value="" data-harga="">-- Pilih Barang --</option>
-                        <?php while ($b = mysqli_fetch_assoc($barangs)): ?>
-                            <option value="<?= $b['idbarang']; ?>" data-harga="<?= $b['harga']; ?>">
-                                <?= htmlspecialchars($b['nama']); ?>
-                            </option>
-                        <?php endwhile; ?>
+                        <?php if ($barangs && mysqli_num_rows($barangs) > 0) : ?>
+                            <?php while ($b = mysqli_fetch_assoc($barangs)): ?>
+                                <option value="<?= $b['idbarang']; ?>" data-harga="<?= $b['harga']; ?>">
+                                    <?= htmlspecialchars($b['nama']); ?> (Harga Pokok: Rp <?= number_format($b['harga'], 0, ',', '.'); ?>)
+                                </option>
+                            <?php endwhile; ?>
+                        <?php endif; ?>
                     </select>
                 </div>
 
@@ -87,7 +91,7 @@ $barangs = mysqli_query($conn, "SELECT idbarang, nama, harga FROM barang WHERE s
                     </div>
 
                     <div class="col-md-7 mb-3">
-                        <label class="form-label fw-semibold">Opsi Harga Beli</label>
+                        <label class="form-label fw-semibold">Opsi Harga Beli Satuan</label>
                         <!-- Pilihan Opsi Radio Button -->
                         <div class="d-flex gap-3 mb-2">
                             <div class="form-check">
@@ -111,7 +115,7 @@ $barangs = mysqli_query($conn, "SELECT idbarang, nama, harga FROM barang WHERE s
 
                 <div class="d-flex justify-content-between align-items-center mt-4">
                     <a href="index.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i> Batal</a>
-                    <button type="submit" class="btn btn-f1-red"><i class="bi bi-save me-1"></i> Simpan Restock</button>
+                    <button type="submit" class="btn btn-f1-red"><i class="bi bi-save me-1"></i> Simpan Pengadaan</button>
                 </div>
             </form>
         </div>

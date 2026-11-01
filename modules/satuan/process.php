@@ -3,7 +3,7 @@ session_start();
 require_once '../../config/database.php';
 
 // 1. Proteksi Akses Eksekusi (Hanya Administrator dan Manajer Gudang)
-if (!isset($_SESSION['user']['role']) || !in_array($_SESSION['user']['role'], ['Administrator', 'Manajer Gudang'])) {
+if (!isset($_SESSION['user']['role']) || !in_array($_SESSION['user']['role'], ['Administrator', 'Manajer Gudang', 'Master Admin'])) {
     echo "<script>alert('Akses Ditolak! Anda tidak memiliki izin untuk mengubah data satuan.'); window.location.href='index.php';</script>";
     exit();
 }

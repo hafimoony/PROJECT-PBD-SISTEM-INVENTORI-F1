@@ -2,23 +2,28 @@
 require_once '../../config/database.php';
 include '../../includes/header.php';
 
-if (!in_array($_SESSION['user']['role'], ['Administrator', 'Auditor'])) {
+// Ambil role dan iduser dari session dengan penanganan fallback aman
+$current_user_role = $_SESSION['user']['role'] ?? '';
+$current_user_id   = $_SESSION['user']['iduser'] ?? 0;
+
+// Pengecekan RBAC View
+if (!in_array($current_user_role, ['Master Admin', 'Administrator', 'Auditor'])) {
     echo "<script>alert('Akses Ditolak!'); window.location.href='../../index.php';</script>";
     exit();
 }
 
-$query = "SELECT * FROM v_master_user ORDER BY iduser ASC";
+// Query JOIN dipastikan mengambil r.nama_role secara eksplisit
+$query = "SELECT u.iduser, u.username, u.idrole, r.nama_role 
+          FROM user u 
+          LEFT JOIN role r ON u.idrole = r.idrole 
+          ORDER BY u.iduser ASC";
 $result = mysqli_query($conn, $query);
-
-if (!$result) {
-    $query = "SELECT u.*, r.nama_role AS role FROM user u LEFT JOIN role r ON u.idrole = r.idrole ORDER BY u.iduser ASC";
-    $result = mysqli_query($conn, $query);
-}
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h4 class="fw-bold m-0"><i class="bi bi-people-fill text-danger me-2"></i> Manajemen User & Hak Akses</h4>
-    <?php if ($_SESSION['user']['role'] === 'Administrator') : ?>
+    
+    <?php if ($current_user_role !== 'Auditor') : ?>
         <a href="create.php" class="btn btn-f1-red"><i class="bi bi-person-plus-fill me-1"></i> Tambah User Baru</a>
     <?php endif; ?>
 </div>
@@ -30,9 +35,8 @@ if (!$result) {
                 <tr>
                     <th width="80">ID</th>
                     <th>Username</th>
-                    <th>Nama Lengkap</th>
                     <th>Role / Hak Akses</th>
-                    <?php if ($_SESSION['user']['role'] === 'Administrator') : ?>
+                    <?php if ($current_user_role !== 'Auditor') : ?>
                         <th width="180" class="text-center">Aksi</th>
                     <?php endif; ?>
                 </tr>
@@ -48,39 +52,53 @@ if (!$result) {
                                 <span class="fw-semibold text-dark"><?= htmlspecialchars($row['username']); ?></span>
                             </div>
                         </td>
-                        <td><?= htmlspecialchars($row['nama_user'] ?? $row['nama'] ?? '-'); ?></td>
                         <td>
                             <?php 
-                            $user_role = $row['role'] ?? $row['nama_role'] ?? 'Belum Atur Role';
-                            $badge = match($user_role) {
-                                'Administrator' => 'bg-danger',
-                                'Manajer Gudang' => 'bg-warning text-dark',
-                                'Staf Pengadaan' => 'bg-info text-dark',
-                                'Kasir / Staf Penjualan' => 'bg-success',
-                                'Auditor' => 'bg-primary',
-                                default => 'bg-secondary'
-                            };
+                            // Ambil nama role dan bersihkan spasi
+                            $user_role = trim($row['nama_role'] ?? '');
+                            
+                            // Tentukan warna badge berdasarkan nama role di database
+                            if (empty($user_role)) {
+                                $badge = 'bg-secondary';
+                                $display_role = 'Belum Atur Role';
+                            } else {
+                                $display_role = $user_role;
+                                $badge = match(true) {
+                                    strcasecmp($user_role, 'Master Admin') === 0           => 'bg-dark text-light border border-secondary',
+                                    strcasecmp($user_role, 'Administrator') === 0          => 'bg-danger',
+                                    strcasecmp($user_role, 'Manajer Gudang') === 0         => 'bg-warning text-dark',
+                                    strcasecmp($user_role, 'Staf Pengadaan') === 0         => 'bg-info text-dark',
+                                    strcasecmp($user_role, 'Kasir / Staf Penjualan') === 0 => 'bg-success',
+                                    strcasecmp($user_role, 'Kasir') === 0                  => 'bg-success',
+                                    strcasecmp($user_role, 'Auditor') === 0                => 'bg-primary',
+                                    default                                                => 'bg-secondary'
+                                };
+                            }
                             ?>
                             <span class="badge <?= $badge; ?> px-3 py-2 fw-normal" style="font-size: 0.82rem; border-radius: 6px;">
-                                <?= htmlspecialchars($user_role); ?>
+                                <?= htmlspecialchars($display_role); ?>
                             </span>
                         </td>
                         
-                        <?php if ($_SESSION['user']['role'] === 'Administrator') : ?>
+                        <?php if ($current_user_role !== 'Auditor') : ?>
                         <td class="text-center">
                             <div class="d-inline-flex gap-2">
-                                <a href="edit.php?id=<?= $row['iduser']; ?>" class="btn btn-sm btn-warning px-3 fw-semibold">
-                                    <i class="bi bi-pencil-square me-1"></i> Edit
-                                </a>
-                                
-                                <?php if ($row['iduser'] != $_SESSION['user']['iduser']) : ?>
-                                    <a href="process.php?action=delete&id=<?= $row['iduser']; ?>" class="btn btn-sm btn-danger px-3 fw-semibold" onclick="return confirm('Yakin ingin menghapus user ini?')">
-                                        <i class="bi bi-trash me-1"></i> Hapus
-                                    </a>
+                                <?php if ($current_user_role === 'Administrator' && in_array($user_role, ['Master Admin', 'Administrator'])) : ?>
+                                    <span class="badge bg-secondary py-2 px-3"><i class="bi bi-lock-fill me-1"></i> Terkunci</span>
                                 <?php else : ?>
-                                    <button class="btn btn-sm btn-secondary px-3" disabled title="Akun sedang digunakan">
-                                        <i class="bi bi-lock-fill"></i>
-                                    </button>
+                                    <a href="edit.php?id=<?= $row['iduser']; ?>" class="btn btn-sm btn-warning px-3 fw-semibold">
+                                        <i class="bi bi-pencil-square me-1"></i> Edit
+                                    </a>
+                                    
+                                    <?php if ($row['iduser'] != $current_user_id && $user_role !== 'Master Admin') : ?>
+                                        <a href="process.php?action=delete&id=<?= $row['iduser']; ?>" class="btn btn-sm btn-danger px-3 fw-semibold" onclick="return confirm('Yakin ingin menghapus user ini?')">
+                                            <i class="bi bi-trash me-1"></i> Hapus
+                                        </a>
+                                    <?php else : ?>
+                                        <button class="btn btn-sm btn-secondary px-3" disabled title="Akun dilindungi / sedang digunakan">
+                                            <i class="bi bi-lock-fill"></i>
+                                        </button>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                             </div>
                         </td>
@@ -89,7 +107,7 @@ if (!$result) {
                     <?php endwhile; ?>
                 <?php else : ?>
                     <tr>
-                        <td colspan="5" class="text-center text-secondary py-4">Belum ada data user.</td>
+                        <td colspan="<?= $current_user_role !== 'Auditor' ? '4' : '3'; ?>" class="text-center text-secondary py-4">Belum ada data user.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>

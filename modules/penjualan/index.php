@@ -3,7 +3,7 @@ require_once '../../config/database.php';
 include '../../includes/header.php';
 
 // Proteksi Akses
-if (!in_array($_SESSION['user']['role'], ['Administrator', 'Kasir / Staf Penjualan', 'Auditor'])) {
+if (!in_array($_SESSION['user']['role'], ['Administrator', 'Kasir / Staf Penjualan', 'Auditor', 'Master Admin'])) {
     echo "<script>alert('Akses Ditolak! Anda tidak memiliki izin ke modul Penjualan.'); window.location.href='../../index.php';</script>";
     exit();
 }
@@ -14,11 +14,11 @@ $result = mysqli_query($conn, $query);
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4><i class="fa-solid fa-cash-register text-danger me-2"></i> Transaksi Penjualan (POS)</h4>
+    <h4><i class="bi bi-calculator text-danger me-2"></i> Transaksi Penjualan (POS)</h4>
     
     <!-- Sembunyikan dari Role Auditor -->
     <?php if ($_SESSION['user']['role'] !== 'Auditor') : ?>
-        <a href="create.php" class="btn btn-f1-red"><i class="fa-solid fa-cart-plus me-1"></i> Transaksi Baru</a>
+        <a href="create.php" class="btn btn-f1-red"><i class="bi bi-plus-circle me-1"></i> Transaksi Baru</a>
     <?php endif; ?>
 </div>
 
@@ -41,14 +41,14 @@ $result = mysqli_query($conn, $query);
                 <tr>
                     <td><span class="badge bg-danger">#PJ-<?= str_pad($row['idpenjualan'], 4, '0', STR_PAD_LEFT); ?></span></td>
                     <td><?= date('d/m/Y H:i', strtotime($row['created_at'])); ?></td>
-                    <td><i class="fa-solid fa-user-gear me-1 text-secondary"></i> <?= htmlspecialchars($row['nama_user'] ?? $row['username']); ?></td>
+                    <td><i class="bi bi-person text-secondary me-1"></i> <?= htmlspecialchars($row['nama_user'] ?? $row['username']); ?></td>
                     <td>Rp <?= number_format($row['subtotal_nilai'], 0, ',', '.'); ?></td>
                     <td>Rp <?= number_format($row['ppn'], 0, ',', '.'); ?></td>
                     <td class="fw-bold text-success">Rp <?= number_format($row['total_nilai'], 0, ',', '.'); ?></td>
                     <td class="text-center">
                         <!-- Semua role (Admin, Kasir, Auditor) tetap bisa membuka/mencetak Struk Detail -->
                         <a href="detail.php?id=<?= $row['idpenjualan']; ?>" class="btn btn-sm btn-info text-dark fw-bold">
-                            <i class="fa-solid fa-receipt me-1"></i> Struk Detail
+                            <i class="bi bi-receipt me-1"></i> Struk Detail
                         </a>
                     </td>
                 </tr>

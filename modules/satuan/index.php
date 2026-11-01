@@ -3,7 +3,7 @@ require_once '../../config/database.php';
 include '../../includes/header.php';
 
 // Proteksi akses
-if (!in_array($_SESSION['user']['role'], ['Administrator', 'Manajer Gudang', 'Auditor'])) {
+if (!in_array($_SESSION['user']['role'], ['Administrator', 'Manajer Gudang', 'Auditor', 'Master Admin'])) {
     echo "<script>alert('Akses Ditolak! Anda tidak memiliki izin ke modul Satuan.'); window.location.href='../../index.php';</script>";
     exit();
 }

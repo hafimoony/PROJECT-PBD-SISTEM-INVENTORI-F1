@@ -11,11 +11,11 @@ if (isset($_SESSION['user'])) {
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = mysqli_real_escape_string($conn, $_POST['username']);
+    $username = mysqli_real_escape_string($conn, trim($_POST['username']));
     $password = $_POST['password'];
 
-    // 1. Ambil kolom u.password juga untuk diverifikasi oleh password_verify()
-    $query = "SELECT u.iduser, u.username, u.nama_user, u.foto, u.password, r.nama_role 
+    // 1. Query disesuaikan dengan skema tabel user (iduser, username, password, idrole)
+    $query = "SELECT u.iduser, u.username, u.password, r.nama_role 
               FROM user u
               JOIN role r ON u.idrole = r.idrole
               WHERE u.username = '$username'";
@@ -30,8 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['user'] = [
                 'iduser'   => $user_data['iduser'],
                 'username' => $user_data['username'],
-                'nama'     => $user_data['nama_user'] ?? $user_data['username'],
-                'foto'     => $user_data['foto'],
+                'nama'     => $user_data['username'],
+                'idrole'   => $user_data['idrole'] ?? null,
                 'role'     => $user_data['nama_role']
             ];
 
@@ -53,7 +53,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login — Apex Grid Store</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Standarisasi ke Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="assets/css/custom.css">
     <style>
         body {
@@ -73,7 +74,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             width: 100%;
             max-width: 400px;
         }
-        /* Custom Styling Tombol F1 Red */
         .btn-f1-red {
             background-color: #e10600;
             color: #ffffff;
@@ -98,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <?php if ($error) : ?>
         <div class="alert alert-danger py-2 fs-6 text-center" role="alert">
-            <i class="fa-solid fa-triangle-exclamation me-1"></i> <?= $error; ?>
+            <i class="bi bi-exclamation-triangle-fill me-1"></i> <?= $error; ?>
         </div>
     <?php endif; ?>
 
@@ -106,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="mb-3">
             <label class="form-label text-secondary small fw-bold">USERNAME</label>
             <div class="input-group">
-                <span class="input-group-text bg-dark border-secondary text-secondary"><i class="fa-solid fa-user"></i></span>
+                <span class="input-group-text bg-dark border-secondary text-secondary"><i class="bi bi-person-fill"></i></span>
                 <input type="text" name="username" class="form-control bg-dark text-light border-secondary" required placeholder="Masukkan username">
             </div>
         </div>
@@ -114,13 +114,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="mb-4">
             <label class="form-label text-secondary small fw-bold">PASSWORD</label>
             <div class="input-group">
-                <span class="input-group-text bg-dark border-secondary text-secondary"><i class="fa-solid fa-lock"></i></span>
+                <span class="input-group-text bg-dark border-secondary text-secondary"><i class="bi bi-lock-fill"></i></span>
                 <input type="password" name="password" class="form-control bg-dark text-light border-secondary" required placeholder="Masukkan password">
             </div>
         </div>
 
         <button type="submit" class="btn btn-f1-red w-100 py-2 fw-bold rounded">
-            <i class="fa-solid fa-right-to-bracket me-2"></i> MASUK KE SYSTEM
+            <i class="bi bi-box-arrow-in-right me-2"></i> MASUK KE SYSTEM
         </button>
 
         <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-secondary border-opacity-25">

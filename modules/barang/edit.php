@@ -2,7 +2,7 @@
 require_once '../../config/database.php';
 include '../../includes/header.php';
 
-if (!in_array($_SESSION['user']['role'], ['Administrator', 'Manajer Gudang'])) {
+if (!in_array($_SESSION['user']['role'], ['Administrator', 'Manajer Gudang', 'Master Admin'])) {
     echo "<script>alert('Akses Ditolak! Anda tidak memiliki izin untuk mengedit data barang.'); window.location.href='index.php';</script>";
     exit();
 }

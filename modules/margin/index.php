@@ -2,7 +2,7 @@
 require_once '../../config/database.php';
 include '../../includes/header.php';
 
-if (!in_array($_SESSION['user']['role'], ['Administrator', 'Manajer Gudang', 'Auditor'])) {
+if (!in_array($_SESSION['user']['role'], ['Administrator', 'Manajer Gudang', 'Auditor', 'Master Admin'])) {
     echo "<script>alert('Akses Ditolak!'); window.location.href='../../index.php';</script>";
     exit();
 }

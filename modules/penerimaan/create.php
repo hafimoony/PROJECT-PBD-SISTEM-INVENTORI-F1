@@ -2,8 +2,8 @@
 require_once '../../config/database.php';
 include '../../includes/header.php';
 
-if (!in_array($_SESSION['user']['role'], ['Administrator', 'Manajer Gudang', 'Staf Pengadaan'])) {
-    echo "<script>alert('Akses Ditolak!'); window.location.href='index.php';</script>";
+if (!in_array($_SESSION['user']['role'], ['Administrator', 'Manajer Gudang', 'Staf Pengadaan', 'Master Admin'])) {
+    echo "<script>alert('Akses Ditolak! Anda tidak memiliki izin ke modul Penerimaan.'); window.location.href='index.php';</script>";
     exit();
 }
 
@@ -11,7 +11,7 @@ $error   = '';
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $iduser        = $_SESSION['user']['iduser'];
+    $iduser        = intval($_SESSION['user']['iduser']);
     $idpengadaan   = intval($_POST['idpengadaan']);
     $idbarang      = intval($_POST['idbarang']);
     $jumlah_terima = intval($_POST['jumlah_terima']);
@@ -19,38 +19,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $status_terima = $_POST['status_terima'];
 
     if ($idpengadaan > 0 && $idbarang > 0 && $jumlah_terima > 0) {
-        $subtotal = $jumlah_terima * $harga_satuan;
-
-        mysqli_begin_transaction($conn);
-
         try {
-            // 1. Insert Header Penerimaan
-            $stmt_h = mysqli_prepare($conn, "INSERT INTO penerimaan (status, idpengadaan, iduser) VALUES (?, ?, ?)");
-            mysqli_stmt_bind_param($stmt_h, "sii", $status_terima, $idpengadaan, $iduser);
-            mysqli_stmt_execute($stmt_h);
-            $idpenerimaan = mysqli_insert_id($conn);
-            mysqli_stmt_close($stmt_h);
-
-            // 2. Insert Detail Penerimaan
-            $stmt_d = mysqli_prepare($conn, "INSERT INTO detail_penerimaan (idpenerimaan, barang_idbarang, jumlah_terima, harga_satuan_terima, sub_total_terima) VALUES (?, ?, ?, ?, ?)");
-            mysqli_stmt_bind_param($stmt_d, "iiiii", $idpenerimaan, $idbarang, $jumlah_terima, $harga_satuan, $subtotal);
-            mysqli_stmt_execute($stmt_d);
-            mysqli_stmt_close($stmt_d);
-
-            // 3. Catat Penambahan Stok ke Kartu Stok
-            $q_stok = mysqli_query($conn, "SELECT stock FROM kartu_stok WHERE idbarang = $idbarang ORDER BY idkartu_stok DESC LIMIT 1");
-            $stok_lama = ($r = mysqli_fetch_assoc($q_stok)) ? intval($r['stock']) : 0;
-            $stok_baru = $stok_lama + $jumlah_terima;
-
-            $stmt_ks = mysqli_prepare($conn, "INSERT INTO kartu_stok (jenis_transaksi, masuk, keluar, stock, idtransaksi, idbarang) VALUES ('M', ?, 0, ?, ?, ?)");
-            mysqli_stmt_bind_param($stmt_ks, "iiii", $jumlah_terima, $stok_baru, $idpenerimaan, $idbarang);
-            mysqli_stmt_execute($stmt_ks);
-            mysqli_stmt_close($stmt_ks);
-
-            mysqli_commit($conn);
-            $success = "Penerimaan barang berhasil dicatat & Kartu Stok bertambah sebanyak $jumlah_terima Pcs!";
+            // Memanggil sp_proses_penerimaan_parsial
+            // Trigger tr_auto_update_status_pengadaan otomatis memperbarui status pengadaan
+            $query_sp = "CALL sp_proses_penerimaan_parsial($iduser, $idpengadaan, $idbarang, $jumlah_terima, $harga_satuan, '$status_terima')";
+            
+            if (mysqli_query($conn, $query_sp)) {
+                $success = "Penerimaan barang berhasil dicatat & Kartu Stok bertambah sebanyak $jumlah_terima Pcs!";
+            } else {
+                throw new Exception(mysqli_error($conn));
+            }
         } catch (Exception $e) {
-            mysqli_rollback($conn);
             $error = "Gagal memproses penerimaan: " . $e->getMessage();
         }
     } else {
@@ -76,7 +55,7 @@ $pengadaans = mysqli_query($conn, "
             <hr class="mt-1 mb-4">
 
             <?php if ($error): ?>
-                <div class="alert alert-danger py-2 mb-3"><?= $error; ?></div>
+                <div class="alert alert-danger py-2 mb-3"><?= htmlspecialchars($error); ?></div>
             <?php endif; ?>
 
             <?php if ($success): ?>
@@ -90,14 +69,16 @@ $pengadaans = mysqli_query($conn, "
                     <label class="form-label fw-semibold">Pilih Document Pengadaan (PO)</label>
                     <select name="idpengadaan" id="selectPO" class="form-select" onchange="hitungSisa()" required>
                         <option value="" data-idbarang="" data-sisariil="0" data-harga="0">-- Pilih Nota Pengadaan --</option>
-                        <?php while ($p = mysqli_fetch_assoc($pengadaans)): ?>
-                            <option value="<?= $p['idpengadaan']; ?>" 
-                                    data-idbarang="<?= $p['idbarang']; ?>"
-                                    data-sisariil="<?= $p['sisa_kurang_riil']; ?>"
-                                    data-harga="<?= $p['harga_satuan']; ?>">
-                                #PGD-<?= $p['idpengadaan']; ?> — <?= htmlspecialchars($p['nama_barang']); ?> (Sisa Kurang: <?= $p['sisa_kurang_riil']; ?> Pcs | Vendor: <?= htmlspecialchars($p['nama_vendor']); ?>)
-                            </option>
-                        <?php endwhile; ?>
+                        <?php if ($pengadaans && mysqli_num_rows($pengadaans) > 0) : ?>
+                            <?php while ($p = mysqli_fetch_assoc($pengadaans)): ?>
+                                <option value="<?= $p['idpengadaan']; ?>" 
+                                        data-idbarang="<?= $p['idbarang']; ?>"
+                                        data-sisariil="<?= $p['sisa_kurang_riil']; ?>"
+                                        data-harga="<?= $p['harga_satuan']; ?>">
+                                    #PGD-<?= str_pad($p['idpengadaan'], 5, '0', STR_PAD_LEFT); ?> — <?= htmlspecialchars($p['nama_barang']); ?> (Sisa Kurang: <?= $p['sisa_kurang_riil']; ?> Pcs | Vendor: <?= htmlspecialchars($p['nama_vendor']); ?>)
+                                </option>
+                            <?php endwhile; ?>
+                        <?php endif; ?>
                     </select>
                 </div>
 

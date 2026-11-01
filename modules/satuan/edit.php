@@ -2,8 +2,7 @@
 require_once '../../config/database.php';
 include '../../includes/header.php';
 
-// 1. Proteksi RBAC: Hanya Administrator dan Manajer Gudang yang boleh mengedit data Satuan
-if (!in_array($_SESSION['user']['role'], ['Administrator', 'Manajer Gudang'])) {
+if (!in_array($_SESSION['user']['role'], ['Administrator', 'Manajer Gudang', 'Master Admin'])) {
     echo "<script>alert('Akses Ditolak! Anda tidak memiliki izin untuk mengedit data satuan.'); window.location.href='index.php';</script>";
     exit();
 }

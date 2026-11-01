@@ -3,7 +3,7 @@ require_once '../../config/database.php';
 include '../../includes/header.php';
 
 // 1. Proteksi RBAC: Hanya Administrator dan Kasir yang boleh membuat transaksi
-if (!in_array($_SESSION['user']['role'], ['Administrator', 'Kasir / Staf Penjualan'])) {
+if (!in_array($_SESSION['user']['role'], ['Administrator', 'Kasir / Staf Penjualan', 'Master Admin'])) {
     echo "<script>alert('Akses Ditolak!'); window.location.href='index.php';</script>";
     exit();
 }
