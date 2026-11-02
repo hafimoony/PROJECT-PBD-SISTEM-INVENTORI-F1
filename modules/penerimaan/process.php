@@ -10,12 +10,11 @@ if (!isset($_SESSION['user']['role']) || !in_array($_SESSION['user']['role'], ['
 $action = $_GET['action'] ?? '';
 
 if ($action == 'create') {
-    $iduser         = (int)$_SESSION['user']['iduser'];
-    $idpengadaan    = (int)($_POST['idpengadaan'] ?? 0);
-    $idbarang       = (int)($_POST['idbarang'] ?? 0);
-    $jumlah_terima  = (int)($_POST['jumlah_terima'] ?? 0);
-    $harga_satuan   = (int)($_POST['harga_satuan'] ?? 0);
-    $status_terima  = mysqli_real_escape_string($conn, $_POST['status_terima'] ?? 'S'); // 'S' = Selesai (Full), 'P' = Parsial
+    $iduser        = (int)$_SESSION['user']['iduser'];
+    $idpengadaan   = (int)($_POST['idpengadaan'] ?? 0);
+    $idbarang      = (int)($_POST['idbarang'] ?? 0);
+    $jumlah_terima = (int)($_POST['jumlah_terima'] ?? 0);
+    $harga_satuan  = (int)($_POST['harga_satuan'] ?? 0);
 
     if ($idpengadaan <= 0 || $idbarang <= 0 || $jumlah_terima <= 0) {
         echo "<script>alert('Data penerimaan tidak valid!'); window.location.href='create.php';</script>";
@@ -23,9 +22,9 @@ if ($action == 'create') {
     }
 
     try {
-        // Memanggil Stored Procedure sp_proses_penerimaan_parsial
-        // Trigger tr_auto_update_status_pengadaan juga otomatis ya
-        $query_sp = "CALL sp_proses_penerimaan_parsial($iduser, $idpengadaan, $idbarang, $jumlah_terima, $harga_satuan, '$status_terima')";
+        // Memanggil Stored Procedure sp_proses_penerimaan_parsial (5 parameter)
+        // Trigger tr_auto_update_status_pengadaan otomatis menangani status pengadaan di tabel `pengadaan`
+        $query_sp = "CALL sp_proses_penerimaan_parsial($iduser, $idpengadaan, $idbarang, $jumlah_terima, $harga_satuan)";
         
         if (mysqli_query($conn, $query_sp)) {
             echo "<script>alert('Penerimaan barang berhasil dicatat!'); window.location.href='index.php';</script>";

@@ -7,36 +7,6 @@ if (!in_array($_SESSION['user']['role'], ['Administrator', 'Manajer Gudang', 'St
     exit();
 }
 
-$error   = '';
-$success = '';
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $iduser        = intval($_SESSION['user']['iduser']);
-    $idpengadaan   = intval($_POST['idpengadaan']);
-    $idbarang      = intval($_POST['idbarang']);
-    $jumlah_terima = intval($_POST['jumlah_terima']);
-    $harga_satuan  = intval($_POST['harga_satuan']);
-    $status_terima = $_POST['status_terima'];
-
-    if ($idpengadaan > 0 && $idbarang > 0 && $jumlah_terima > 0) {
-        try {
-            // Memanggil sp_proses_penerimaan_parsial
-            // Trigger tr_auto_update_status_pengadaan otomatis memperbarui status pengadaan
-            $query_sp = "CALL sp_proses_penerimaan_parsial($iduser, $idpengadaan, $idbarang, $jumlah_terima, $harga_satuan, '$status_terima')";
-            
-            if (mysqli_query($conn, $query_sp)) {
-                $success = "Penerimaan barang berhasil dicatat & Kartu Stok bertambah sebanyak $jumlah_terima Pcs!";
-            } else {
-                throw new Exception(mysqli_error($conn));
-            }
-        } catch (Exception $e) {
-            $error = "Gagal memproses penerimaan: " . $e->getMessage();
-        }
-    } else {
-        $error = "Mohon isi jumlah barang yang diterima dengan benar!";
-    }
-}
-
 // Hanya tampilkan dokumen pengadaan yang MASIH ada sisa kekurangan riil (> 0)
 $pengadaans = mysqli_query($conn, "
     SELECT v.* 
@@ -54,17 +24,8 @@ $pengadaans = mysqli_query($conn, "
             </div>
             <hr class="mt-1 mb-4">
 
-            <?php if ($error): ?>
-                <div class="alert alert-danger py-2 mb-3"><?= htmlspecialchars($error); ?></div>
-            <?php endif; ?>
-
-            <?php if ($success): ?>
-                <div class="alert alert-success py-2 mb-3">
-                    <?= $success; ?> <a href="index.php" class="alert-link">Lihat Riwayat Penerimaan</a>
-                </div>
-            <?php endif; ?>
-
-            <form method="POST" action="">
+            <!-- Action mengarah ke process.php?action=create -->
+            <form method="POST" action="process.php?action=create">
                 <div class="mb-3">
                     <label class="form-label fw-semibold">Pilih Document Pengadaan (PO)</label>
                     <select name="idpengadaan" id="selectPO" class="form-select" onchange="hitungSisa()" required>
@@ -97,16 +58,9 @@ $pengadaans = mysqli_query($conn, "
                 </div>
 
                 <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-semibold text-danger">Sisa Kekurangan Baru</label>
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label fw-semibold text-danger">Estimasi Sisa Kekurangan Baru</label>
                         <input type="number" id="inputQtySisa" class="form-control bg-light text-danger fw-bold" readonly placeholder="0">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label fw-semibold">Status Penerimaan</label>
-                        <select name="status_terima" id="selectStatus" class="form-select" required>
-                            <option value="S">Selesai (Full / Terpenuhi)</option>
-                            <option value="P">Parsial (Sebagian / Kurang)</option>
-                        </select>
                     </div>
                 </div>
 
@@ -129,12 +83,10 @@ function hitungSisa() {
     const sisaRiil = parseInt(selectedOption.getAttribute('data-sisariil') || 0);
     const inputQtyTerima = document.getElementById('inputQtyTerima');
     
-    // Set nilai maksimal di atribut elemen input
     inputQtyTerima.setAttribute('max', sisaRiil);
 
     let qtyTerima = parseInt(inputQtyTerima.value || 0);
 
-    // Jika input melebihi sisa yang harus diterima, kembalikan ke batas sisaRiil
     if (qtyTerima > sisaRiil) {
         qtyTerima = sisaRiil;
         inputQtyTerima.value = sisaRiil;
@@ -147,12 +99,6 @@ function hitungSisa() {
 
     const sisaBaru = sisaRiil - qtyTerima;
     document.getElementById('inputQtySisa').value = sisaBaru > 0 ? sisaBaru : 0;
-
-    if (sisaBaru > 0) {
-        document.getElementById('selectStatus').value = 'P';
-    } else {
-        document.getElementById('selectStatus').value = 'S';
-    }
 }
 </script>
 
