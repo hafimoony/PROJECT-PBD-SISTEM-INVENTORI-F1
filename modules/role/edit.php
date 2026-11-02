@@ -18,7 +18,7 @@ if (!$role_data) {
     exit();
 }
 
-// ATURAN B: Jika Administrator biasa mencoba mengedit role Master Admin atau Administrator, tolak aksesnya
+// Jika Administrator biasa mencoba mengedit role Master Admin atau Administrator, tolak aksesnya
 if ($_SESSION['user']['role'] === 'Administrator' && in_array($role_data['nama_role'], ['Master Admin', 'Administrator'])) {
     echo "<script>alert('Akses Ditolak! Administrator tidak diizinkan mengubah role utama sistem.'); window.location.href='index.php';</script>";
     exit();

@@ -22,7 +22,7 @@ if ($action == 'create') {
     }
 
     try {
-        // Memanggil Stored Procedure sp_restock_barang
+        // Memanggil sp_restock_barang
         $query_sp = "CALL sp_restock_barang($iduser, $idvendor, $idbarang, $jumlah, $harga_satuan)";
         
         if (mysqli_query($conn, $query_sp)) {

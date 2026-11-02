@@ -2,13 +2,11 @@
 require_once '../../config/database.php';
 include '../../includes/header.php';
 
-// Proteksi Akses
 if (!in_array($_SESSION['user']['role'], ['Administrator', 'Kasir / Staf Penjualan', 'Auditor', 'Master Admin'])) {
     echo "<script>alert('Akses Ditolak! Anda tidak memiliki izin ke modul Penjualan.'); window.location.href='../../index.php';</script>";
     exit();
 }
 
-// View v_penjualan
 $query = "SELECT * FROM v_penjualan ORDER BY idpenjualan DESC";
 $result = mysqli_query($conn, $query);
 ?>

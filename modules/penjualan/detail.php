@@ -2,7 +2,6 @@
 require_once '../../config/database.php';
 include '../../includes/header.php';
 
-// 1. Proteksi RBAC: Admin, Kasir, dan Auditor boleh melihat/mencetak struk
 if (!in_array($_SESSION['user']['role'], ['Administrator', 'Kasir / Staf Penjualan', 'Auditor', 'Master Admin'])) {
     echo "<script>alert('Akses Ditolak! Anda tidak memiliki izin ke modul Penjualan.'); window.location.href='../../index.php';</script>";
     exit();
@@ -10,7 +9,6 @@ if (!in_array($_SESSION['user']['role'], ['Administrator', 'Kasir / Staf Penjual
 
 $idpenjualan = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
-// 2. SQL Header dari View v_penjualan
 $header_query = "SELECT * FROM v_penjualan WHERE idpenjualan = '$idpenjualan'";
 $header_res = mysqli_query($conn, $header_query);
 $header = mysqli_fetch_assoc($header_res);
@@ -21,7 +19,7 @@ if (!$header) {
     exit();
 }
 
-// 3. SQL Detail Items dari View v_detail_penjualan
+// Detail Items dari View v_detail_penjualan
 $detail_query = "SELECT * FROM v_detail_penjualan WHERE penjualan_idpenjualan = '$idpenjualan'";
 $details = mysqli_query($conn, $detail_query);
 ?>

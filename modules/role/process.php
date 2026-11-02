@@ -13,7 +13,7 @@ $action = $_GET['action'] ?? '';
 
 // 1. PROSES CREATE (Khusus Master Admin)
 if ($action == 'create') {
-    // ATURAN B: Administrator biasa TIDAK BOLEH membuat role baru
+    // Administrator biasa TIDAK BOLEH membuat role baru krn yg boleh hanya master admin
     if ($current_role !== 'Master Admin') {
         echo "<script>alert('Akses Ditolak! Hanya Master Admin yang diizinkan membuat role baru.'); window.location.href='index.php';</script>";
         exit();
@@ -50,7 +50,7 @@ if ($action == 'create') {
     $old_role_data = mysqli_fetch_assoc($get_role);
     $old_role_name = $old_role_data['nama_role'] ?? '';
 
-    // ATURAN B: Mencegah pengubahan nama pada role vital sistem (Master Admin & Administrator)
+    // Role Master admin dan administrator tidak boleh diubah namanya
     if (in_array($old_role_name, ['Master Admin', 'Administrator'])) {
         echo "<script>alert('Akses Ditolak! Role utama sistem tidak dapat diubah.'); window.location.href='index.php';</script>";
         exit();

@@ -2,19 +2,15 @@
 require_once '../../config/database.php';
 include '../../includes/header.php';
 
-// Ambil role user aktif dari session
 $current_user_role = $_SESSION['user']['role'] ?? '';
 
-// Proteksi RBAC View: Administrator, Manajer Gudang, Staf Pengadaan, Auditor, dan Master Admin
 if (!in_array($current_user_role, ['Administrator', 'Manajer Gudang', 'Staf Pengadaan', 'Auditor', 'Master Admin'])) {
     echo "<script>alert('Akses Ditolak!'); window.location.href='../../index.php';</script>";
     exit();
 }
 
-// Hak Akses CUD Retur: Master Admin, Administrator, Manajer Gudang, Staf Pengadaan
 $can_create_retur = in_array($current_user_role, ['Master Admin', 'Administrator', 'Manajer Gudang', 'Staf Pengadaan']);
 
-// Query mengambil data riwayat retur dari MySQL View (v_retur)
 $query = "SELECT * FROM v_retur ORDER BY idretur DESC";
 $result = mysqli_query($conn, $query);
 ?>

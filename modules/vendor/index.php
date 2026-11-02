@@ -2,13 +2,11 @@
 require_once '../../config/database.php';
 include '../../includes/header.php';
 
-// Cek Hak Akses Modul Vendor
 if (!in_array($_SESSION['user']['role'], ['Administrator', 'Staf Pengadaan', 'Auditor', 'Master Admin'])) {
     echo "<script>alert('Akses Ditolak! Anda tidak memiliki izin ke modul Vendor.'); window.location.href='../../index.php';</script>";
     exit();
 }
 
-// View v_master_vendor
 $query = "SELECT * FROM v_master_vendor ORDER BY idvendor DESC";
 $result = mysqli_query($conn, $query);
 ?>

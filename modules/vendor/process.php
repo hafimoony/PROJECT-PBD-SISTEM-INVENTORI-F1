@@ -5,7 +5,6 @@ if (session_status() === PHP_SESSION_NONE) {
 
 require_once '../../config/database.php';
 
-// Keamanan RBAC: Hanya Master Admin, Administrator, dan Staf Pengadaan yang boleh CUD
 if (!in_array($_SESSION['user']['role'], ['Master Admin', 'Administrator', 'Staf Pengadaan'])) {
     echo "<script>alert('Akses Ditolak! Anda tidak memiliki izin untuk mengubah data vendor.'); window.location.href='index.php';</script>";
     exit();

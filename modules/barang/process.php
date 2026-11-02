@@ -2,7 +2,6 @@
 session_start();
 require_once '../../config/database.php';
 
-// 1. Proteksi Akses Eksekusi (Hanya Administrator dan Manajer Gudang yang boleh CUD)
 if (!isset($_SESSION['user']['role']) || !in_array($_SESSION['user']['role'], ['Administrator', 'Manajer Gudang', 'Master Admin'])) {
     echo "<script>alert('Akses Ditolak! Anda tidak memiliki izin untuk mengubah data barang.'); window.location.href='index.php';</script>";
     exit();
@@ -10,7 +9,7 @@ if (!isset($_SESSION['user']['role']) || !in_array($_SESSION['user']['role'], ['
 
 $action = $_GET['action'] ?? '';
 
-// 2. PROSES CREATE
+// PROSES CREATE
 if ($action == 'create') {
     $nama     = mysqli_real_escape_string($conn, $_POST['nama']);
     $jenis    = mysqli_real_escape_string($conn, $_POST['jenis']);
@@ -27,7 +26,7 @@ if ($action == 'create') {
         echo "Error Insert: " . mysqli_error($conn);
     }
 
-// 3. PROSES UPDATE
+// PROSES UPDATE
 } elseif ($action == 'update') {
     $idbarang = (int)$_POST['idbarang'];
     $nama     = mysqli_real_escape_string($conn, $_POST['nama']);
@@ -46,7 +45,7 @@ if ($action == 'create') {
         echo "Error Update: " . mysqli_error($conn);
     }
 
-// 4. PROSES DELETE
+// PROSES DELETE
 } elseif ($action == 'delete') {
     $idbarang = (int)($_GET['id'] ?? 0);
 

@@ -2,7 +2,6 @@
 require_once '../../config/database.php';
 include '../../includes/header.php';
 
-// Proteksi Akses
 if (!in_array($_SESSION['user']['role'], ['Administrator', 'Manajer Gudang', 'Kasir / Staf Penjualan', 'Staf Pengadaan', 'Auditor', 'Master Admin'])) {
     echo "<script>alert('Akses Ditolak!'); window.location.href='../../index.php';</script>";
     exit();
@@ -10,7 +9,6 @@ if (!in_array($_SESSION['user']['role'], ['Administrator', 'Manajer Gudang', 'Ka
 
 $idbarang_filter = isset($_GET['idbarang']) ? intval($_GET['idbarang']) : 0;
 
-// Query dari View v_kartu_stok
 $query_str = "SELECT * FROM v_kartu_stok";
 if ($idbarang_filter > 0) {
     $query_str .= " WHERE idbarang = $idbarang_filter";

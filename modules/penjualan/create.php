@@ -2,16 +2,15 @@
 require_once '../../config/database.php';
 include '../../includes/header.php';
 
-// 1. Proteksi RBAC: Hanya Administrator dan Kasir yang boleh membuat transaksi
 if (!in_array($_SESSION['user']['role'], ['Administrator', 'Kasir / Staf Penjualan', 'Master Admin'])) {
     echo "<script>alert('Akses Ditolak!'); window.location.href='index.php';</script>";
     exit();
 }
 
-// 2. Ambil list barang aktif beserta satuannya dari View
+// Ambil list barang aktif beserta satuannya dari View
 $barang_query = mysqli_query($conn, "SELECT * FROM v_master_barang WHERE status = 1 ORDER BY nama_barang ASC");
 
-// 3. Ambil HANYA Margin Penjualan yang AKTIF (status = 1)
+// Ambil HANYA Margin Penjualan yang AKTIF (status = 1)
 $margin_query = mysqli_query($conn, "SELECT * FROM margin_penjualan WHERE status = 1 ORDER BY idmargin_penjualan DESC");
 ?>
 

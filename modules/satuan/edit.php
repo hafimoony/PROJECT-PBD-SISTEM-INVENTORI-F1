@@ -7,10 +7,10 @@ if (!in_array($_SESSION['user']['role'], ['Administrator', 'Manajer Gudang', 'Ma
     exit();
 }
 
-// 2. Ambil ID Satuan dari URL
+// Ambil ID Satuan dari URL
 $idsatuan = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
-// 3. Query Data Satuan
+// Query Data Satuan
 $query = "SELECT * FROM satuan WHERE idsatuan = '$idsatuan'";
 $result = mysqli_query($conn, $query);
 $satuan = mysqli_fetch_assoc($result);

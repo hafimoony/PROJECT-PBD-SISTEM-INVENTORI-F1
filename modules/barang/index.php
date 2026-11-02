@@ -2,13 +2,10 @@
 require_once '../../config/database.php';
 include '../../includes/header.php';
 
-// Ambil role user aktif dari session
 $current_user_role = $_SESSION['user']['role'] ?? '';
 
-// Hak akses CUD Data Barang hanya untuk Master Admin, Administrator, dan Manajer Gudang
 $can_manage_barang = in_array($current_user_role, ['Master Admin', 'Administrator', 'Manajer Gudang']);
 
-// Query data barang join ke tabel satuan
 $query = "SELECT * FROM v_master_barang ORDER BY idbarang ASC";
 $result = mysqli_query($conn, $query);
 ?>

@@ -2,7 +2,6 @@
 require_once '../../config/database.php';
 include '../../includes/header.php';
 
-// Cek autentikasi RBAC: Hanya Master Admin dan Administrator yang boleh membuat user
 if (!in_array($_SESSION['user']['role'], ['Master Admin', 'Administrator'])) {
     echo "<script>alert('Akses Ditolak! Anda tidak memiliki izin untuk menambah user.'); window.location.href='index.php';</script>";
     exit();
@@ -10,7 +9,7 @@ if (!in_array($_SESSION['user']['role'], ['Master Admin', 'Administrator'])) {
 
 $current_role = $_SESSION['user']['role'];
 
-// ATURAN A: Jika Administrator biasa, sembunyikan pilihan Master Admin & Administrator dari dropdown
+// Jika Administrator biasa, sembunyikan pilihan Master Admin & Administrator dari dropdown
 if ($current_role === 'Administrator') {
     $role_query = mysqli_query($conn, "SELECT * FROM role WHERE nama_role NOT IN ('Master Admin', 'Administrator') ORDER BY idrole ASC");
 } else {

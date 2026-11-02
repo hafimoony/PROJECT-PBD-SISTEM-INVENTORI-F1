@@ -22,8 +22,8 @@ if ($action == 'create') {
     }
 
     try {
-        // Memanggil Stored Procedure sp_proses_penerimaan_parsial (5 parameter)
-        // Trigger tr_auto_update_status_pengadaan otomatis menangani status pengadaan di tabel `pengadaan`
+        // hi di sini manggil sp_proses_penerimaan_parsial (5 parameter)
+        // nah terus tr_auto_update_status_pengadaan itu bakal otomatis menangani status pengadaan di tabel `pengadaan`
         $query_sp = "CALL sp_proses_penerimaan_parsial($iduser, $idpengadaan, $idbarang, $jumlah_terima, $harga_satuan)";
         
         if (mysqli_query($conn, $query_sp)) {

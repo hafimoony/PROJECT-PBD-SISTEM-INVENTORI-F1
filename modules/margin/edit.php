@@ -2,7 +2,6 @@
 require_once '../../config/database.php';
 include '../../includes/header.php';
 
-// Proteksi RBAC: Hanya Admin dan Manajer Gudang
 if (!in_array($_SESSION['user']['role'], ['Administrator', 'Manajer Gudang', 'Master Admin'])) {
     echo "<script>alert('Akses Ditolak!'); window.location.href='index.php';</script>";
     exit();

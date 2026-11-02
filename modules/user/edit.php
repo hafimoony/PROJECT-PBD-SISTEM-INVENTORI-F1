@@ -2,7 +2,6 @@
 require_once '../../config/database.php';
 include '../../includes/header.php';
 
-// Cek autentikasi RBAC dasar
 if (!in_array($_SESSION['user']['role'], ['Master Admin', 'Administrator'])) {
     echo "<script>alert('Akses Ditolak! Anda tidak memiliki izin untuk mengedit user.'); window.location.href='index.php';</script>";
     exit();
@@ -11,7 +10,6 @@ if (!in_array($_SESSION['user']['role'], ['Master Admin', 'Administrator'])) {
 $iduser = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $current_role = $_SESSION['user']['role'];
 
-// Query Data User Target
 $query = "SELECT u.*, r.nama_role FROM user u JOIN role r ON u.idrole = r.idrole WHERE u.iduser = '$iduser'";
 $result = mysqli_query($conn, $query);
 $user_data = mysqli_fetch_assoc($result);

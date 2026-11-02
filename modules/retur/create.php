@@ -7,7 +7,7 @@ if (!in_array($_SESSION['user']['role'], ['Administrator', 'Manajer Gudang', 'St
     exit();
 }
 
-// Ambil data detail penerimaan beserta sisa yang masih bisa diretur (jumlah_terima - total_diretur)
+// data detail penerimaan beserta sisa yang masih bisa diretur (jumlah_terima - total_diretur)
 $penerimaans = mysqli_query($conn, "
     SELECT 
         dp.iddetail_penerimaan, 

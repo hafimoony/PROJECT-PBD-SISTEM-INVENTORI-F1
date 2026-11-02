@@ -2,21 +2,15 @@
 require_once '../../config/database.php';
 include '../../includes/header.php';
 
-// Ambil role dan iduser dari session dengan penanganan fallback aman
 $current_user_role = $_SESSION['user']['role'] ?? '';
 $current_user_id   = $_SESSION['user']['iduser'] ?? 0;
 
-// Pengecekan RBAC View
 if (!in_array($current_user_role, ['Master Admin', 'Administrator', 'Auditor'])) {
     echo "<script>alert('Akses Ditolak!'); window.location.href='../../index.php';</script>";
     exit();
 }
 
-// Query JOIN dipastikan mengambil r.nama_role secara eksplisit
-$query = "SELECT u.iduser, u.username, u.idrole, r.nama_role 
-          FROM user u 
-          LEFT JOIN role r ON u.idrole = r.idrole 
-          ORDER BY u.iduser ASC";
+$query = "SELECT * FROM v_master_user ORDER BY iduser ASC";
 $result = mysqli_query($conn, $query);
 ?>
 

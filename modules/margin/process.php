@@ -2,7 +2,6 @@
 session_start();
 require_once '../../config/database.php';
 
-// Proteksi Akses Server Side
 if (!isset($_SESSION['user']['role']) || !in_array($_SESSION['user']['role'], ['Administrator', 'Manajer Gudang', 'Master Admin'])) {
     echo "<script>alert('Akses Ditolak! Anda tidak memiliki izin mengedit data margin.'); window.location.href='index.php';</script>";
     exit();

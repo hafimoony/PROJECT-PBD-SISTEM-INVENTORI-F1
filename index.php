@@ -2,7 +2,6 @@
 require_once 'config/database.php';
 include 'includes/header.php';
 
-// Ambil role user aktif dari session dengan fallback aman
 $role = $_SESSION['user']['role'] ?? '';
 
 // Hitung Statistik Data Master

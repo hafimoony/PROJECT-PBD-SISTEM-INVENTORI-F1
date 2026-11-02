@@ -2,17 +2,14 @@
 require_once '../../config/database.php';
 include '../../includes/header.php';
 
-// Ambil role user aktif dari session
 $current_user_role = $_SESSION['user']['role'] ?? '';
 
-// Proteksi RBAC View: Hanya Master Admin, Administrator, dan Auditor yang bisa lihat halaman ini
 if (!in_array($current_user_role, ['Master Admin', 'Administrator', 'Auditor'])) {
     echo "<script>alert('Akses Ditolak!'); window.location.href='../../index.php';</script>";
     exit();
 }
 
-// Query data role
-$query = "SELECT * FROM role ORDER BY idrole ASC";
+$query = "SELECT * FROM v_master_role ORDER BY idrole ASC";
 $result = mysqli_query($conn, $query);
 ?>
 

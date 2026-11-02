@@ -2,7 +2,6 @@
 session_start();
 require_once '../../config/database.php';
 
-// Cek akses RBAC: Hanya Master Admin dan Administrator yang diizinkan masuk
 if (!in_array($_SESSION['user']['role'], ['Master Admin', 'Administrator'])) {
     echo "<script>alert('Akses Ditolak! Anda tidak memiliki izin untuk mengubah data user.'); window.location.href='index.php';</script>";
     exit();
@@ -27,7 +26,7 @@ if ($action == 'create') {
     $target_role_data = mysqli_fetch_assoc($get_target_role);
     $target_role_name = $target_role_data['nama_role'] ?? '';
 
-    // ATURAN A: Administrator biasa TIDAK BOLEH membuat akun Master Admin atau Administrator
+    // Administrator biasa TIDAK BOLEH membuat akun Master Admin atau Administrator
     if ($current_role === 'Administrator' && in_array($target_role_name, ['Master Admin', 'Administrator'])) {
         echo "<script>alert('Akses Ditolak! Administrator hanya dapat membuat akun staf operasional.'); window.location.href='create.php';</script>";
         exit();
@@ -64,7 +63,7 @@ if ($action == 'create') {
     $target_user_data = mysqli_fetch_assoc($get_target_user);
     $target_role_name = $target_user_data['nama_role'] ?? '';
 
-    // ATURAN A: Administrator biasa TIDAK BOLEH mengedit/mereset password akun Master Admin atau sesama Administrator
+    // Administrator biasa TIDAK BOLEH mengedit/mereset password akun Master Admin atau sesama Administrator
     if ($current_role === 'Administrator' && in_array($target_role_name, ['Master Admin', 'Administrator'])) {
         echo "<script>alert('Akses Ditolak! Anda tidak memiliki izin mengedit akun Administrator atau Master Admin.'); window.location.href='index.php';</script>";
         exit();
@@ -75,7 +74,7 @@ if ($action == 'create') {
         $hashed_password = password_hash($password, PASSWORD_DEFAULT);
         $query = "UPDATE user SET password = '$hashed_password', idrole = '$idrole' WHERE iduser = '$iduser'";
     } else {
-        // Jika password kosong, hanya update role
+        // Jika password kosong, hanya update role yeahhhhhhh
         $query = "UPDATE user SET idrole = '$idrole' WHERE iduser = '$iduser'";
     }
 
