@@ -67,11 +67,13 @@ $margin_query = mysqli_query($conn, "SELECT * FROM margin_penjualan WHERE status
                                 <?php 
                                 mysqli_data_seek($barang_query, 0);
                                 while ($b = mysqli_fetch_assoc($barang_query)) : 
+                                    $stok = (int)$b['sisa_stok'];
                                 ?>
                                     <option value="<?= $b['idbarang']; ?>" 
                                             data-harga="<?= $b['harga']; ?>" 
-                                            data-stok="<?= $b['sisa_stok']; ?>">
-                                        <?= htmlspecialchars($b['nama_barang']); ?> — (Stok: <?= $b['sisa_stok']; ?> <?= $b['nama_satuan']; ?> | Base: Rp <?= number_format($b['harga'], 0, ',', '.'); ?>)
+                                            data-stok="<?= $stok; ?>"
+                                            <?= ($stok <= 0) ? 'disabled' : ''; ?>>
+                                        <?= htmlspecialchars($b['nama_barang']); ?> — (Stok: <?= $stok; ?> <?= $b['nama_satuan']; ?> | Base: Rp <?= number_format($b['harga'], 0, ',', '.'); ?>) <?= ($stok <= 0) ? '[KOSONG]' : ''; ?>
                                     </option>
                                 <?php endwhile; ?>
                             </select>

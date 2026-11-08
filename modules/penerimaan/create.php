@@ -21,14 +21,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         mysqli_begin_transaction($conn);
 
         try {
-            // Hitung apakah penerimaan ini menyelesaikan seluruh pesanan atau hanya parsial
             $total_diterima_kali_ini = 0;
             $total_sisa_sebelumnya   = 0;
 
             foreach ($items as $item) {
                 $qty_terima = intval($item['jumlah_terima'] ?? 0);
                 $sisa_riil  = intval($item['sisa_kurang_riil'] ?? 0);
-                $harga_sat  = intval($item['harga_satuan_terima'] ?? 0);
 
                 if ($qty_terima > $sisa_riil) {
                     throw new Exception("Jumlah terima fisik tidak boleh melebihi sisa kekurangan pesanan!");
@@ -42,51 +40,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 throw new Exception("Masukkan minimal 1 item barang dengan jumlah diterima fisik > 0!");
             }
 
-            // Tentukan status penerimaan: 'S' jika semua sisa barang diterima, 'P' jika baru sebagian
+            // Status penerimaan: 'S' jika semua sisa barang diterima, 'P' jika baru sebagian (parsial)
             $status_penerimaan = ($total_diterima_kali_ini >= $total_sisa_sebelumnya) ? 'S' : 'P';
 
-            // A. INSERT HEADER PENERIMAAN
-            $stmt_h = mysqli_prepare($conn, "INSERT INTO penerimaan (status, idpengadaan, iduser) VALUES (?, ?, ?)");
-            mysqli_stmt_bind_param($stmt_h, "sii", $status_penerimaan, $idpengadaan, $iduser);
-
-            if (!mysqli_stmt_execute($stmt_h)) {
-                throw new Exception("Gagal membuat header penerimaan: " . mysqli_stmt_error($stmt_h));
+            // A. CALL sp_create_header_penerimaan
+            $q_h = mysqli_query($conn, "CALL sp_create_header_penerimaan('$status_penerimaan', $idpengadaan, $iduser, @idpenerimaan)");
+            if (!$q_h) {
+                throw new Exception("Gagal membuat header penerimaan via Stored Procedure!");
             }
 
-            $idpenerimaan = mysqli_insert_id($conn);
-            mysqli_stmt_close($stmt_h);
+            // Ambil OUT Parameter idpenerimaan
+            $res_out = mysqli_query($conn, "SELECT @idpenerimaan AS idpenerimaan");
+            $row_out = mysqli_fetch_assoc($res_out);
+            $idpenerimaan = intval($row_out['idpenerimaan'] ?? 0);
 
-            // B. INSERT DETAIL ITEM PENERIMAAN (LOOPING MULTI-ITEM)
-            // Setiap row detail_penerimaan di-insert, Trigger 'tr_tambah_stok_penerimaan' di MySQL akan OTOMATIS berjalan mencatat mutasi masuk ('M') di kartu_stok!
-            $stmt_d = mysqli_prepare($conn, "INSERT INTO detail_penerimaan (idpenerimaan, barang_idbarang, jumlah_terima, harga_satuan_terima, sub_total_terima) VALUES (?, ?, ?, ?, ?)");
+            // Clear buffer result setelah CALL SP
+            while (mysqli_more_results($conn) && mysqli_next_result($conn)) {;}
 
+            if ($idpenerimaan <= 0) {
+                throw new Exception("ID Penerimaan tidak valid setelah eksekusi Stored Procedure!");
+            }
+
+            // B. CALL sp_add_detail_penerimaan
             foreach ($items as $item) {
                 $idbarang   = intval($item['idbarang']);
                 $qty_terima = intval($item['jumlah_terima']);
                 $harga_sat  = intval($item['harga_satuan_terima']);
-                $subtotal   = $qty_terima * $harga_sat;
 
-                // Hanya simpan item yang jumlah terimanya > 0
                 if ($qty_terima > 0) {
-                    mysqli_stmt_bind_param($stmt_d, "iiiii", $idpenerimaan, $idbarang, $qty_terima, $harga_sat, $subtotal);
-                    if (!mysqli_stmt_execute($stmt_d)) {
-                        throw new Exception("Gagal meng-insert detail barang penerimaan!");
+                    $q_d = mysqli_query($conn, "CALL sp_add_detail_penerimaan($idpenerimaan, $idbarang, $qty_terima, $harga_sat)");
+                    if (!$q_d) {
+                        throw new Exception("Gagal meng-insert detail barang penerimaan via Stored Procedure!");
                     }
+                    while (mysqli_more_results($conn) && mysqli_next_result($conn)) {;}
                 }
             }
-            mysqli_stmt_close($stmt_d);
 
-            // Update status nota pengadaan ke 'S' (Selesai) jika seluruh barang telah diterima
+            // Update status nota pengadaan ke 'S' (Selesai) jika seluruh barang telah diterima full
             if ($status_penerimaan === 'S') {
                 mysqli_query($conn, "UPDATE pengadaan SET status = 'S' WHERE idpengadaan = $idpengadaan");
             }
 
             // 2. COMMIT TRANSAKSI PERMANEN
             mysqli_commit($conn);
-            $success = "Berita Acara Penerimaan Barang (#RCV-" . str_pad($idpenerimaan, 5, '0', STR_PAD_LEFT) . ") berhasil diproses! Stok barang di gudang otomatis bertambah.";
+            $success = "Berita Acara Penerimaan Barang (#RCV-" . str_pad($idpenerimaan, 5, '0', STR_PAD_LEFT) . ") berhasil diproses via Stored Procedure! Stok barang di gudang otomatis bertambah.";
 
         } catch (Exception $e) {
-            // 3. ROLLBACK TRANSAKSI JIKA ADA ERROR
+            // 3. ROLLBACK TRANSAKSI JIKA TERJADI ERROR
             mysqli_rollback($conn);
             $error = "Gagal memproses penerimaan: " . $e->getMessage();
         }
@@ -149,7 +149,7 @@ if ($q_opsi && mysqli_num_rows($q_opsi) > 0) {
                 <div id="containerItems" class="d-none">
                     <h6 class="fw-bold mb-3 text-secondary"><i class="bi bi-list-check me-1"></i> Daftar Item Barang pada Nota Pengadaan</h6>
                     <div class="table-responsive mb-3">
-                        <table class="table table-bordered align-middle">
+                        <table class="table table-bordered align-middle mb-0">
                             <thead class="bg-light">
                                 <tr>
                                     <th>Nama Barang</th>
@@ -167,7 +167,7 @@ if ($q_opsi && mysqli_num_rows($q_opsi) > 0) {
 
                     <div class="d-flex justify-content-between align-items-center mt-4">
                         <a href="index.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i> Batal</a>
-                        <button type="submit" class="btn btn-f1-red px-4"><i class="bi bi-save me-1"></i> Simpan Penerimaan</button>
+                        <button type="submit" class="btn btn-f1-red px-4"><i class="bi bi-save me-1"></i> Simpan Penerimaan Barang</button>
                     </div>
                 </div>
             </form>
@@ -176,7 +176,7 @@ if ($q_opsi && mysqli_num_rows($q_opsi) > 0) {
 </div>
 
 <script>
-// Data Opsi Barang dari PHP
+// Data Opsi Barang dari PHP View v_opsi_penerimaan_pengadaan
 const allOpsiItems = <?= json_encode($list_opsi); ?>;
 
 function renderItemsPO() {
@@ -217,7 +217,6 @@ function renderItemsPO() {
                        class="form-control text-center fw-bold" oninput="hitungSubtotalPenerimaan(${index})" required>
             </td>
             <td>
-                <!-- Opsi Update Harga Satuan Penerimaan sesuai Revisi Poin 4 -->
                 <input type="number" name="items[${index}][harga_satuan_terima]" id="harga_terima_${index}" 
                        min="1" value="${item.harga_dasar}" class="form-control" oninput="hitungSubtotalPenerimaan(${index})" required>
                 <small class="text-muted" style="font-size: 0.7rem;">*Dapat di-update jika ada perubahan harga</small>

@@ -29,11 +29,11 @@ $result = mysqli_query($conn, $query);
                     <th width="100" class="text-center">JENIS</th>
                     <th>SATUAN</th>
                     <th>HARGA</th>
-                    <th width="100">STATUS</th>
+                    <th width="120" class="text-center">STATUS</th>
                     
                     <!-- Header AKSI HANYA TAMPIL untuk role pengelola -->
                     <?php if ($can_manage_barang) : ?>
-                        <th width="180" class="text-center">AKSI</th>
+                        <th width="220" class="text-center">AKSI</th>
                     <?php endif; ?>
                 </tr>
             </thead>
@@ -41,12 +41,12 @@ $result = mysqli_query($conn, $query);
                 <?php if ($result && mysqli_num_rows($result) > 0) : ?>
                     <?php while ($row = mysqli_fetch_assoc($result)) : ?>
                     <?php 
-                        // Ambil status dan bersihkan spasi
+                        // Ambil nilai status barang
                         $status_val = strtoupper(trim((string)$row['status']));
-                        $is_aktif = in_array($status_val, ['A', '1', 'AKTIF']);
+                        $is_aktif   = in_array($status_val, ['A', '1', 'AKTIF']);
                     ?>
                     <tr>
-                        <td class="fw-bold text-secondary">#<?= $row['idbarang']; ?></td>
+                        <td class="fw-bold text-secondary">#BRG-<?= str_pad($row['idbarang'], 5, '0', STR_PAD_LEFT); ?></td>
                         <td class="fw-semibold text-dark"><?= htmlspecialchars($row['nama_barang']); ?></td>
                         <td class="text-center">
                             <span class="badge bg-secondary rounded-circle p-2" style="width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;">
@@ -55,26 +55,39 @@ $result = mysqli_query($conn, $query);
                         </td>
                         <td><?= htmlspecialchars($row['nama_satuan'] ?? '-'); ?></td>
                         <td class="fw-bold">Rp <?= number_format($row['harga'], 0, ',', '.'); ?></td>
-                        <td>
+                        <td class="text-center">
                             <?php if ($is_aktif) : ?>
-                                <span class="badge bg-success px-3 py-2 fw-normal" style="border-radius: 6px;">Aktif</span>
+                                <span class="badge bg-success px-3 py-2 fw-normal" style="border-radius: 6px;"><i class="bi bi-check-circle me-1"></i> Aktif</span>
                             <?php else : ?>
-                                <span class="badge bg-danger px-3 py-2 fw-normal" style="border-radius: 6px;">Non-Aktif</span>
+                                <span class="badge bg-secondary px-3 py-2 fw-normal" style="border-radius: 6px;"><i class="bi bi-x-circle me-1"></i> Non-Aktif</span>
                             <?php endif; ?>
                         </td>
                         
-                        <!-- Kolom Tombol Edit & Hapus HANYA TAMPIL untuk role pengelola -->
+                        <!-- Kolom Tombol Edit & Toggle Status HANYA TAMPIL untuk role pengelola -->
                         <?php if ($can_manage_barang) : ?>
                         <td class="text-center">
                             <div class="d-inline-flex gap-2">
-                                <a href="edit.php?id=<?= $row['idbarang']; ?>" class="btn btn-sm btn-warning px-3 fw-semibold">
+                                <a href="edit.php?id=<?= $row['idbarang']; ?>" class="btn btn-sm btn-warning px-2 fw-semibold" title="Edit Data Barang">
                                     <i class="bi bi-pencil-square me-1"></i> Edit
                                 </a>
-                                <a href="process.php?action=delete&id=<?= $row['idbarang']; ?>" 
-                                   class="btn btn-sm btn-danger px-3 fw-semibold" 
-                                   onclick="return confirm('Apakah Anda yakin ingin menghapus barang ini?')">
-                                    <i class="bi bi-trash me-1"></i> Hapus
-                                </a>
+
+                                <?php if ($is_aktif) : ?>
+                                    <!-- Tombol Non-Aktifkan (mengubah status ke 0) -->
+                                    <a href="process.php?action=toggle_status&id=<?= $row['idbarang']; ?>&status=0" 
+                                       class="btn btn-sm btn-outline-danger px-2 fw-semibold" 
+                                       onclick="return confirm('Sembunyikan barang ini dari form transaksi pengadaan & kasir?')"
+                                       title="Non-aktifkan Barang">
+                                        <i class="bi bi-eye-slash me-1"></i> Non-Aktifkan
+                                    </a>
+                                <?php else : ?>
+                                    <!-- Tombol Aktifkan (mengubah status ke 1) -->
+                                    <a href="process.php?action=toggle_status&id=<?= $row['idbarang']; ?>&status=1" 
+                                       class="btn btn-sm btn-outline-success px-2 fw-semibold" 
+                                       onclick="return confirm('Aktifkan kembali barang ini agar muncul di form transaksi?')"
+                                       title="Aktifkan Barang">
+                                        <i class="bi bi-eye me-1"></i> Aktifkan
+                                    </a>
+                                <?php endif; ?>
                             </div>
                         </td>
                         <?php endif; ?>
