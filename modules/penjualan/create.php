@@ -7,10 +7,25 @@ if (!in_array($_SESSION['user']['role'], ['Administrator', 'Kasir / Staf Penjual
     exit();
 }
 
-// Ambil list barang aktif beserta satuannya dari View
-$barang_query = mysqli_query($conn, "SELECT * FROM v_master_barang WHERE status = 1 ORDER BY nama_barang ASC");
+$barang_query = mysqli_query($conn, "
+    SELECT 
+        b.idbarang, 
+        b.nama AS nama_barang, 
+        b.harga, 
+        s.nama_satuan,
+        COALESCE((
+            SELECT stock 
+            FROM kartu_stok 
+            WHERE idbarang = b.idbarang 
+            ORDER BY idkartu_stok DESC 
+            LIMIT 1
+        ), 0) AS sisa_stok
+    FROM barang b
+    JOIN satuan s ON b.idsatuan = s.idsatuan
+    WHERE b.status = 1
+    ORDER BY b.nama ASC
+");
 
-// Ambil HANYA Margin Penjualan yang AKTIF (status = 1)
 $margin_query = mysqli_query($conn, "SELECT * FROM margin_penjualan WHERE status = 1 ORDER BY idmargin_penjualan DESC");
 ?>
 
@@ -22,10 +37,12 @@ $margin_query = mysqli_query($conn, "SELECT * FROM margin_penjualan WHERE status
                 <!-- HEADER & PILIHAN MARGIN PENJUALAN AKTIF -->
                 <div class="row align-items-center mb-4 pb-3 border-bottom">
                     <div class="col-md-6">
-                        <h4 class="text-danger m-0"><i class="bi bi-cart-check me-2"></i> Form Transaksi Kasir (POS)</h4>
+                        <h4 class="text-danger m-0 fw-bold"><i class="bi bi-cart-check me-2"></i> Form Transaksi Kasir (POS)</h4>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label small fw-bold text-secondary mb-1"><i class="bi bi-percent text-danger me-1"></i> Pilih Margin Penjualan Aktif</label>
+                        <label class="form-label small fw-bold text-secondary mb-1">
+                            <i class="bi bi-percent text-danger me-1"></i> Margin Penjualan Aktif
+                        </label>
                         <select name="idmargin_penjualan" id="selectMargin" class="form-select" required>
                             <?php if ($margin_query && mysqli_num_rows($margin_query) > 0) : ?>
                                 <?php while ($m = mysqli_fetch_assoc($margin_query)) : ?>
@@ -40,7 +57,7 @@ $margin_query = mysqli_query($conn, "SELECT * FROM margin_penjualan WHERE status
                     </div>
                 </div>
 
-                <!-- Container Item Barang -->
+                <!-- CONTAINER ITEM BARANG MULTI-ITEM -->
                 <div id="items-container">
                     <div class="row g-2 mb-3 item-row align-items-end p-3 rounded bg-light border">
                         <div class="col-md-5">
@@ -51,8 +68,10 @@ $margin_query = mysqli_query($conn, "SELECT * FROM margin_penjualan WHERE status
                                 mysqli_data_seek($barang_query, 0);
                                 while ($b = mysqli_fetch_assoc($barang_query)) : 
                                 ?>
-                                    <option value="<?= $b['idbarang']; ?>" data-harga="<?= $b['harga']; ?>">
-                                        <?= htmlspecialchars($b['nama_barang']); ?> (Harga Dasar: Rp <?= number_format($b['harga'], 0, ',', '.'); ?> / <?= $b['nama_satuan']; ?>)
+                                    <option value="<?= $b['idbarang']; ?>" 
+                                            data-harga="<?= $b['harga']; ?>" 
+                                            data-stok="<?= $b['sisa_stok']; ?>">
+                                        <?= htmlspecialchars($b['nama_barang']); ?> — (Stok: <?= $b['sisa_stok']; ?> <?= $b['nama_satuan']; ?> | Base: Rp <?= number_format($b['harga'], 0, ',', '.'); ?>)
                                     </option>
                                 <?php endwhile; ?>
                             </select>
@@ -72,11 +91,11 @@ $margin_query = mysqli_query($conn, "SELECT * FROM margin_penjualan WHERE status
                 </div>
 
                 <!-- Tombol Tambah Baris Barang -->
-                <button type="button" class="btn btn-sm btn-outline-secondary mb-4" id="btn-add-item">
+                <button type="button" class="btn btn-sm btn-outline-danger mb-4" id="btn-add-item">
                     <i class="bi bi-plus-circle me-1"></i> Tambah Item Barang Lain
                 </button>
 
-                <!-- Ringkasan Total & PPN -->
+                <!-- Ringkasan Total & PPN 11% -->
                 <div class="card bg-light p-3 border mb-4">
                     <div class="d-flex justify-content-between mb-2">
                         <span class="text-secondary">Subtotal (Termasuk Margin):</span>
@@ -84,7 +103,7 @@ $margin_query = mysqli_query($conn, "SELECT * FROM margin_penjualan WHERE status
                     </div>
                     <div class="d-flex justify-content-between mb-2">
                         <span class="text-secondary">PPN (11%):</span>
-                        <strong class="text-dark" id="txt-ppn">Rp 0</strong>
+                        <strong class="text-dark text-info" id="txt-ppn">Rp 0</strong>
                     </div>
                     <hr class="my-2">
                     <div class="d-flex justify-content-between fs-5">
@@ -95,7 +114,7 @@ $margin_query = mysqli_query($conn, "SELECT * FROM margin_penjualan WHERE status
 
                 <div class="d-flex justify-content-between align-items-center">
                     <a href="index.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i> Batal</a>
-                    <button type="submit" class="btn btn-f1-red btn-lg px-4"><i class="bi bi-printer me-2"></i> Simpan & Cetak Struk</button>
+                    <button type="submit" class="btn btn-f1-red btn-lg px-4"><i class="bi bi-printer me-2"></i> Simpan & Transaksi Kasir</button>
                 </div>
             </form>
         </div>
@@ -122,22 +141,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const selectedOpt = select.options[select.selectedIndex];
             const hargaDasar = selectedOpt ? parseFloat(selectedOpt.getAttribute('data-harga') || 0) : 0;
-            const qty = parseFloat(qtyInput.value || 0);
+            const stokTersedia = selectedOpt ? parseInt(selectedOpt.getAttribute('data-stok') || 0) : 0;
+            let qty = parseInt(qtyInput.value || 0);
 
-            // Hitung harga jual per unit (Harga Dasar + Margin)
-            const hargaJual = hargaDasar + (hargaDasar * (persenMargin / 100));
+            // Validasi frontend stok tidak boleh melebihi sisa stok fisik
+            if (stokTersedia > 0 && qty > stokTersedia) {
+                qty = stokTersedia;
+                qtyInput.value = stokTersedia;
+                alert(`Jumlah beli melebihi stok yang tersedia (${stokTersedia} Pcs)!`);
+            }
+
+            // Hitung harga jual per unit (Harga Dasar + Margin) sesuai fn_hitung_harga_jual
+            const hargaJual = Math.round(hargaDasar + (hargaDasar * (persenMargin / 100)));
             const rowSubtotal = hargaJual * qty;
 
-            subtotalInput.value = 'Rp ' + Math.round(rowSubtotal).toLocaleString('id-ID');
+            subtotalInput.value = 'Rp ' + rowSubtotal.toLocaleString('id-ID');
             subtotalTotal += rowSubtotal;
         });
 
-        const ppn = subtotalTotal * 0.11;
+        // PPN 11% sesuai fn_hitung_ppn
+        const ppn = Math.round(subtotalTotal * 0.11);
         const grandTotal = subtotalTotal + ppn;
 
-        document.getElementById('txt-subtotal').innerText = 'Rp ' + Math.round(subtotalTotal).toLocaleString('id-ID');
-        document.getElementById('txt-ppn').innerText = 'Rp ' + Math.round(ppn).toLocaleString('id-ID');
-        document.getElementById('txt-total').innerText = 'Rp ' + Math.round(grandTotal).toLocaleString('id-ID');
+        document.getElementById('txt-subtotal').innerText = 'Rp ' + subtotalTotal.toLocaleString('id-ID');
+        document.getElementById('txt-ppn').innerText = 'Rp ' + ppn.toLocaleString('id-ID');
+        document.getElementById('txt-total').innerText = 'Rp ' + grandTotal.toLocaleString('id-ID');
     }
 
     container.addEventListener('change', hitungTotal);

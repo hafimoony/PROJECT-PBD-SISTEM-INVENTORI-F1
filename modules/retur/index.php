@@ -31,11 +31,11 @@ $result = mysqli_query($conn, $query);
         <table class="table table-f1 table-hover align-middle mb-0">
             <thead>
                 <tr>
-                    <th width="100">ID RETUR</th>
+                    <th width="110">ID RETUR</th>
                     <th width="140">WAKTU</th>
-                    <th width="130">ID PENERIMAAN</th>
+                    <th width="120">ID RCV</th>
                     <th>BARANG</th>
-                    <th width="120" class="text-center">JUMLAH RETUR</th>
+                    <th width="130" class="text-center">JUMLAH RETUR</th>
                     <th>ALASAN RETUR</th>
                     <th>PETUGAS</th>
                 </tr>
@@ -44,28 +44,28 @@ $result = mysqli_query($conn, $query);
                 <?php if ($result && mysqli_num_rows($result) > 0) : ?>
                     <?php while ($row = mysqli_fetch_assoc($result)) : ?>
                     <?php 
-                        // Penanganan nama kolom dinamis sesuai struktur View v_retur
-                        $waktu_retur  = $row['created_at'] ?? $row['tanggal'] ?? $row['waktu'] ?? 'now';
-                        $nama_barang  = $row['nama_barang'] ?? $row['nama'] ?? '-';
-                        $jumlah_retur = $row['jumlah'] ?? $row['jumlah_retur'] ?? 0;
+                        $waktu_retur  = $row['created_at'] ?? 'now';
+                        $nama_barang  = $row['nama_barang'] ?? '-';
+                        $nama_satuan  = $row['nama_satuan'] ?? 'Pcs';
+                        $jumlah_retur = $row['jumlah_retur'] ?? 0;
                         $alasan_retur = $row['alasan'] ?? '-';
-                        $nama_petugas = $row['nama_user'] ?? $row['username'] ?? $row['nama_petugas'] ?? '-';
+                        $nama_petugas = $row['nama_user'] ?? '-';
                     ?>
                     <tr>
-                        <td class="fw-bold text-danger">#RTR-<?= $row['idretur']; ?></td>
+                        <td class="fw-bold text-danger">#RTR-<?= str_pad($row['idretur'], 5, '0', STR_PAD_LEFT); ?></td>
                         <td><?= date('d/m/Y H:i', strtotime($waktu_retur)); ?></td>
-                        <td>#RCV-<?= $row['idpenerimaan']; ?></td>
-                        <td class="fw-bold"><?= htmlspecialchars($nama_barang != '' ? $nama_barang : '-'); ?></td>
+                        <td class="fw-bold text-secondary">#RCV-<?= str_pad($row['idpenerimaan'], 5, '0', STR_PAD_LEFT); ?></td>
+                        <td class="fw-bold text-dark"><?= htmlspecialchars($nama_barang); ?></td>
                         <td class="text-center">
-                            <span class="badge bg-danger px-2 py-1">-<?= $jumlah_retur; ?> Pcs</span>
+                            <span class="badge bg-danger px-2 py-1">-<?= $jumlah_retur; ?> <?= htmlspecialchars($nama_satuan); ?></span>
                         </td>
-                        <td class="text-secondary"><?= htmlspecialchars($alasan_retur != '' ? $alasan_retur : '-'); ?></td>
-                        <td class="fw-semibold text-dark"><?= htmlspecialchars($nama_petugas != '' ? $nama_petugas : '-'); ?></td>
+                        <td class="text-secondary"><?= htmlspecialchars($alasan_retur); ?></td>
+                        <td class="fw-semibold text-secondary"><?= htmlspecialchars($nama_petugas); ?></td>
                     </tr>
                     <?php endwhile; ?>
                 <?php else : ?>
                     <tr>
-                        <td colspan="7" class="text-center text-secondary py-4">Belum ada data retur pembelian.</td>
+                        <td colspan="7" class="text-center text-secondary py-4">Belum ada data dokumen retur pembelian barang.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
