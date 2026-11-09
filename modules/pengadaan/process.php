@@ -20,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'create
     mysqli_begin_transaction($conn);
 
     try {
+        // Hitung Subtotal Akumulasi
         $subtotal_header = 0;
         foreach ($items as $item) {
             $qty   = (int)($item['jumlah'] ?? 0);
@@ -28,20 +29,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'create
             $subtotal_header += ($qty * $harga);
         }
 
-        // 1. CALL fn_hitung_ppn
-        $q_ppn = mysqli_query($conn, "SELECT fn_hitung_ppn($subtotal_header) AS ppn");
-        $ppn_header   = (int)(mysqli_fetch_assoc($q_ppn)['ppn'] ?? 0);
-        $total_header = $subtotal_header + $ppn_header;
-
-        // 2. CALL sp_create_header_pengadaan
-        $q_h = mysqli_query($conn, "CALL sp_create_header_pengadaan($iduser, $idvendor, $subtotal_header, $ppn_header, $total_header, @idpengadaan)");
+        // 1. CALL sp_create_header_pengadaan
+        $q_h = mysqli_query($conn, "CALL sp_create_header_pengadaan($iduser, $idvendor, $subtotal_header, @idpengadaan)");
         if (!$q_h) throw new Exception("Gagal CALL sp_create_header_pengadaan!");
         
         $res_out = mysqli_query($conn, "SELECT @idpengadaan AS idpengadaan");
         $idpengadaan = (int)(mysqli_fetch_assoc($res_out)['idpengadaan'] ?? 0);
         while (mysqli_more_results($conn) && mysqli_next_result($conn)) {;}
 
-        // 3. CALL sp_add_detail_pengadaan
+        // 2. CALL sp_add_detail_pengadaan
         foreach ($items as $item) {
             $idbarang = (int)$item['idbarang'];
             $jumlah   = (int)$item['jumlah'];
@@ -53,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'create
         }
 
         mysqli_commit($conn);
-        echo "<script>alert('Pengadaan #PGD-" . str_pad($idpengadaan, 5, '0', STR_PAD_LEFT) . " Berhasil!'); window.location.href='index.php';</script>";
+        echo "<script>alert('Pengadaan #PGD-" . str_pad($idpengadaan, 5, '0', STR_PAD_LEFT) . " Berhasil dibuat!'); window.location.href='index.php';</script>";
         exit();
 
     } catch (Exception $e) {

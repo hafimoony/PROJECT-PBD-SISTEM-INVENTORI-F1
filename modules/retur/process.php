@@ -22,7 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'create
     mysqli_begin_transaction($conn);
 
     try {
-        // 1. CALL sp_proses_retur (5 Parameter)
+        // 1. CALL sp_proses_retur
         $q_sp = mysqli_query($conn, "CALL sp_proses_retur($iduser, $idpenerimaan, $iddetail_penerimaan, $jumlah, '$alasan')");
         if (!$q_sp) {
             throw new Exception("Gagal CALL sp_proses_retur: " . mysqli_error($conn));

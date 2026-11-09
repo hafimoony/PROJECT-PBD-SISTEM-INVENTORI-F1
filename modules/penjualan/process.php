@@ -29,17 +29,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'create
         $jumlah   = (int)($jumlah_arr[$i] ?? 0);
 
         if ($idbarang > 0 && $jumlah > 0) {
-            // 1. CALL fn_hitung_harga_jual
+            // Hitung harga jual pake fn_hitung_harga_jual
             $q_harga = mysqli_query($conn, "SELECT b.nama, fn_hitung_harga_jual(b.harga, $persen_margin) AS harga_jual FROM barang b WHERE b.idbarang = $idbarang");
             $b       = mysqli_fetch_assoc($q_harga);
 
             if ($b) {
+                // Validasi Stok di PHP
                 $q_stok = mysqli_query($conn, "SELECT stock FROM kartu_stok WHERE idbarang = $idbarang ORDER BY idkartu_stok DESC LIMIT 1");
                 $stok_saat_ini = (int)(mysqli_fetch_assoc($q_stok)['stock'] ?? 0);
 
                 if ($stok_saat_ini < $jumlah) {
                     $nama_b = addslashes($b['nama']);
-                    echo "<script>alert('Stok \"$nama_b\" tidak cukup!'); window.location.href='create.php';</script>";
+                    echo "<script>alert('Stok \"$nama_b\" kurang! (Sisa: $stok_saat_ini Pcs)'); window.location.href='create.php';</script>";
                     exit();
                 }
 
@@ -52,23 +53,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'create
         }
     }
 
-    // 2. CALL fn_hitung_ppn
-    $q_ppn = mysqli_query($conn, "SELECT fn_hitung_ppn($subtotal_nilai) AS nominal_ppn");
-    $ppn   = (int)(mysqli_fetch_assoc($q_ppn)['nominal_ppn'] ?? 0);
-    $total_nilai = $subtotal_nilai + $ppn;
-
     mysqli_begin_transaction($conn);
 
     try {
-        // 3. CALL sp_create_header_penjualan
-        $q_h = mysqli_query($conn, "CALL sp_create_header_penjualan($iduser, $idmargin_penjualan, $subtotal_nilai, $ppn, $total_nilai, @idpenjualan)");
+        // CALL SP HEADER PENJUALAN
+        $q_h = mysqli_query($conn, "CALL sp_create_header_penjualan($iduser, $idmargin_penjualan, $subtotal_nilai, @idpenjualan)");
         if (!$q_h) throw new Exception("Gagal CALL sp_create_header_penjualan!");
 
         $res_out = mysqli_query($conn, "SELECT @idpenjualan AS idpenjualan");
         $idpenjualan = (int)(mysqli_fetch_assoc($res_out)['idpenjualan'] ?? 0);
         while (mysqli_more_results($conn) && mysqli_next_result($conn)) {;}
 
-        // 4. CALL sp_add_detail_penjualan
+        // CALL SP DETAIL PENJUALAN
         foreach ($items as $item) {
             $q_d = mysqli_query($conn, "CALL sp_add_detail_penjualan($idpenjualan, {$item['idbarang']}, {$item['harga_satuan']}, {$item['jumlah']})");
             if (!$q_d) throw new Exception("Gagal CALL sp_add_detail_penjualan!");
