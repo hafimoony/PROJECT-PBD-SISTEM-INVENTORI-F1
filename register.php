@@ -11,12 +11,16 @@ if (isset($_SESSION['user'])) {
 $error   = '';
 $success = '';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = mysqli_real_escape_string($conn, trim($_POST['username']));
-    $password = $_POST['password'];
+// Ambil semua daftar role dari database (6 role)
+$q_roles = mysqli_query($conn, "SELECT idrole, nama_role FROM v_master_role ORDER BY idrole ASC");
 
-    if (empty($username) || empty($password)) {
-        $error = "Semua field wajib diisi!";
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $username = mysqli_real_escape_string($conn, trim($_POST['username'] ?? ''));
+    $password = $_POST['password'] ?? '';
+    $idrole   = intval($_POST['idrole'] ?? 0);
+
+    if (empty($username) || empty($password) || $idrole <= 0) {
+        $error = "Semua field (termasuk Role) wajib diisi!";
     } else {
         // 1. Cek apakah username sudah dipakai
         $check_query = "SELECT iduser FROM user WHERE username = '$username'";
@@ -25,17 +29,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (mysqli_num_rows($check_res) > 0) {
             $error = "Username sudah digunakan, silakan pakai username lain!";
         } else {
-            // 2. Ambil idrole secara dinamis untuk role staf operasional (Kasir / Staf Penjualan)
-            $get_role = mysqli_query($conn, "SELECT idrole FROM role WHERE nama_role LIKE '%Kasir%' OR nama_role LIKE '%Penjualan%' LIMIT 1");
-            $role_data = mysqli_fetch_assoc($get_role);
-            $idrole = $role_data['idrole'] ?? 3; // Fallback ke ID 3 jika tidak ditemukan
-
-            // 3. Hash password menggunakan Bcrypt
+            // 2. Hash password menggunakan Bcrypt (sesuai kode aslimu)
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-            // 4. Simpan user baru ke database sesuai skema (iduser, username, password, idrole)
-            $query = "INSERT INTO user (username, password, idrole) 
-                      VALUES ('$username', '$hashed_password', '$idrole')";
+            // 3. Simpan user baru ke database (menyertakan kolom nama_user & idrole)
+            $query = "INSERT INTO user (username, nama_user, password, idrole) 
+                      VALUES ('$username', '$username', '$hashed_password', $idrole)";
 
             if (mysqli_query($conn, $query)) {
                 $success = "Registrasi berhasil! Silakan <a href='login.php' class='text-danger fw-bold'>Login</a>.";
@@ -58,11 +57,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <style>
         body {
             background: radial-gradient(circle at center, #1a1d24 0%, #0b0d10 100%);
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: 'Poppins', sans-serif;
+            padding: 1rem;
         }
         .register-card {
             background-color: #151821;
@@ -115,11 +115,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
         </div>
 
-        <div class="mb-4">
+        <div class="mb-3">
             <label class="form-label text-secondary small fw-bold">PASSWORD</label>
             <div class="input-group">
                 <span class="input-group-text bg-dark border-secondary text-secondary"><i class="bi bi-lock-fill"></i></span>
                 <input type="password" name="password" class="form-control bg-dark text-light border-secondary" required placeholder="Masukkan password">
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <label class="form-label text-secondary small fw-bold">ROLE / JABATAN</label>
+            <div class="input-group">
+                <span class="input-group-text bg-dark border-secondary text-secondary"><i class="bi bi-person-badge-fill"></i></span>
+                <select name="idrole" class="form-select bg-dark text-light border-secondary" required>
+                    <option value="">-- Pilih Role Pengguna --</option>
+                    <?php if ($q_roles && mysqli_num_rows($q_roles) > 0): ?>
+                        <?php while ($r = mysqli_fetch_assoc($q_roles)): ?>
+                            <option value="<?= $r['idrole']; ?>">
+                                <?= htmlspecialchars($r['nama_role']); ?>
+                            </option>
+                        <?php endwhile; ?>
+                    <?php endif; ?>
+                </select>
             </div>
         </div>
 

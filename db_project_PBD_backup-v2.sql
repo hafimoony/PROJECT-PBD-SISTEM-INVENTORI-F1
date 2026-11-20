@@ -175,7 +175,8 @@ INSERT INTO role (nama_role) VALUES
 ('Manajer Gudang'),
 ('Kasir / Staf Penjualan'),
 ('Staf Pengadaan'),
-('Auditor');
+('Auditor'),
+('Master Admin');
 
 -- 2. DML Entitas: satuan (5 Data)
 INSERT INTO satuan (nama_satuan, status) VALUES
