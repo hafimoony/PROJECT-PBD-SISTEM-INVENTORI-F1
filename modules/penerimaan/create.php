@@ -217,9 +217,20 @@ function renderItemsPO() {
                        class="form-control text-center fw-bold" oninput="hitungSubtotalPenerimaan(${index})" required>
             </td>
             <td>
+                <!-- Switch Pilihan Harga Tetap vs Harga Baru -->
+                <div class="form-check form-switch mb-1">
+                    <input class="form-check-input" type="checkbox" id="toggle_harga_${index}" 
+                           onchange="toggleInputHarga(${index}, ${item.harga_dasar})">
+                    <label class="form-check-label small text-secondary fw-semibold" for="toggle_harga_${index}">
+                        Input Harga Baru
+                    </label>
+                </div>
                 <input type="number" name="items[${index}][harga_satuan_terima]" id="harga_terima_${index}" 
-                       min="1" value="${item.harga_dasar}" class="form-control" oninput="hitungSubtotalPenerimaan(${index})" required>
-                <small class="text-muted" style="font-size: 0.7rem;">*Dapat di-update jika ada perubahan harga</small>
+                       min="1" value="${item.harga_dasar}" class="form-control bg-light" 
+                       oninput="hitungSubtotalPenerimaan(${index})" readonly required>
+                <small class="text-muted d-block mt-1" id="info_harga_${index}" style="font-size: 0.72rem;">
+                    *Harga tetap sesuai master barang
+                </small>
             </td>
             <td>
                 <input type="text" id="subtotal_terima_${index}" class="form-control bg-light fw-bold text-dark" readonly value="Rp 0">
@@ -230,6 +241,27 @@ function renderItemsPO() {
     });
 
     container.classList.remove('d-none');
+}
+
+function toggleInputHarga(index, hargaDefault) {
+    const checkbox = document.getElementById(`toggle_harga_${index}`);
+    const inputHarga = document.getElementById(`harga_terima_${index}`);
+    const infoText = document.getElementById(`info_harga_${index}`);
+
+    if (checkbox.checked) {
+        // Buka kunci input harga baru
+        inputHarga.removeAttribute('readonly');
+        inputHarga.classList.remove('bg-light');
+        inputHarga.focus();
+        infoText.innerHTML = '<span class="text-danger fw-semibold">*Harga baru otomatis memperbarui Master Barang!</span>';
+    } else {
+        // Kembalikan ke harga master & kunci kembali
+        inputHarga.value = hargaDefault;
+        inputHarga.setAttribute('readonly', 'readonly');
+        inputHarga.classList.add('bg-light');
+        infoText.innerHTML = '*Harga tetap sesuai master barang';
+        hitungSubtotalPenerimaan(index);
+    }
 }
 
 function hitungSubtotalPenerimaan(index) {
