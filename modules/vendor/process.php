@@ -56,12 +56,38 @@ if ($action == 'create') {
         echo "Error Update Vendor: " . mysqli_error($conn);
     }
 
-// 3. PROSES DELETE (DENGAN TRY-CATCH AMAN)
+// 3. PROSES TOGGLE STATUS (AKTIF 'A' / NON-AKTIF 'N')
+} elseif ($action == 'toggle_status') {
+    $idvendor = (int)($_GET['id'] ?? 0);
+    $status   = ($_GET['status'] === 'A') ? 'A' : 'N';
+
+    if ($idvendor <= 0) {
+        header("Location: index.php");
+        exit();
+    }
+
+    $query = "UPDATE vendor SET status = '$status' WHERE idvendor = '$idvendor'";
+
+    if (mysqli_query($conn, $query)) {
+        header("Location: index.php");
+        exit();
+    } else {
+        echo "Error Toggle Status Vendor: " . mysqli_error($conn);
+    }
+
+// 4. PROSES DELETE (DENGAN CEK RELASI PENGADAAN & TRY-CATCH AMAN)
 } elseif ($action == 'delete') {
     $idvendor = (int)($_GET['id'] ?? 0);
 
     if ($idvendor <= 0) {
         header("Location: index.php");
+        exit();
+    }
+
+    // Cek apakah vendor sudah memiliki riwayat transaksi di tabel pengadaan (mencegah ON DELETE CASCADE)
+    $cek_pengadaan = mysqli_query($conn, "SELECT idpengadaan FROM pengadaan WHERE vendor_idvendor = '$idvendor' LIMIT 1");
+    if ($cek_pengadaan && mysqli_num_rows($cek_pengadaan) > 0) {
+        echo "<script>alert('Gagal menghapus! Vendor ini sudah memiliki riwayat transaksi pengadaan. Silakan gunakan tombol Non-Aktifkan saja.'); window.location.href='index.php';</script>";
         exit();
     }
 

@@ -36,8 +36,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'create
         // 1. CALL sp_create_header_penerimaan
         $q_h = mysqli_query($conn, "CALL sp_create_header_penerimaan('$status_penerimaan', $idpengadaan, $iduser, @idpenerimaan)");
         if (!$q_h) throw new Exception("Gagal CALL sp_create_header_penerimaan!");
-
+        // membaca id penerimaan yang diinput ke header penerimaan, untuk lanjut ke detail penerimaan
         $res_out = mysqli_query($conn, "SELECT @idpenerimaan AS idpenerimaan");
+        // ini ambil id penerimaan buat lanjut ke detail penerimaan
         $idpenerimaan = (int)(mysqli_fetch_assoc($res_out)['idpenerimaan'] ?? 0);
         while (mysqli_more_results($conn) && mysqli_next_result($conn)) {;}
 

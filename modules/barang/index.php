@@ -3,20 +3,50 @@ require_once '../../config/database.php';
 include '../../includes/header.php';
 
 $current_user_role = $_SESSION['user']['role'] ?? '';
-
 $can_manage_barang = in_array($current_user_role, ['Master Admin', 'Administrator', 'Manajer Gudang']);
 
-$query = "SELECT * FROM v_master_barang ORDER BY idbarang ASC";
+// Ambil parameter filter status dari URL (default: semua)
+$filter_status = $_GET['status'] ?? 'all';
+
+// Susun kondisi WHERE berdasarkan filter yang dipilih
+$where_clause = "";
+if ($filter_status === 'aktif') {
+    $where_clause = "WHERE status = 1";
+} elseif ($filter_status === 'nonaktif') {
+    $where_clause = "WHERE status = 0";
+}
+
+$query = "SELECT * FROM v_master_barang $where_clause ORDER BY idbarang ASC";
 $result = mysqli_query($conn, $query);
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
     <h4 class="fw-bold m-0"><i class="bi bi-boxes text-danger me-2"></i> Master Data Barang</h4>
     
-    <!-- Tombol Tambah Barang HANYA TAMPIL untuk Master Admin, Administrator, & Manajer Gudang -->
-    <?php if ($can_manage_barang) : ?>
-        <a href="create.php" class="btn btn-f1-red"><i class="bi bi-plus-circle me-1"></i> Tambah Barang Baru</a>
-    <?php endif; ?>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        <!-- Tombol Filter Status Barang -->
+        <div class="btn-group" role="group" aria-label="Filter Status Barang">
+            <a href="index.php?status=all" 
+               class="btn btn-sm <?= ($filter_status === 'all') ? 'btn-dark fw-bold' : 'btn-outline-secondary'; ?>">
+                Semua
+            </a>
+            <a href="index.php?status=aktif" 
+               class="btn btn-sm <?= ($filter_status === 'aktif') ? 'btn-success fw-bold' : 'btn-outline-success'; ?>">
+                <i class="bi bi-check-circle me-1"></i> Aktif
+            </a>
+            <a href="index.php?status=nonaktif" 
+               class="btn btn-sm <?= ($filter_status === 'nonaktif') ? 'btn-secondary fw-bold' : 'btn-outline-secondary'; ?>">
+                <i class="bi bi-x-circle me-1"></i> Non-Aktif
+            </a>
+        </div>
+
+        <!-- Tombol Tambah Barang HANYA TAMPIL untuk Master Admin, Administrator, & Manajer Gudang -->
+        <?php if ($can_manage_barang) : ?>
+            <a href="create.php" class="btn btn-sm btn-f1-red px-3 py-2">
+                <i class="bi bi-plus-circle me-1"></i> Tambah Barang Baru
+            </a>
+        <?php endif; ?>
+    </div>
 </div>
 
 <div class="card card-f1 p-3">
@@ -33,7 +63,7 @@ $result = mysqli_query($conn, $query);
                     
                     <!-- Header AKSI HANYA TAMPIL untuk role pengelola -->
                     <?php if ($can_manage_barang) : ?>
-                        <th width="220" class="text-center">AKSI</th>
+                        <th width="290" class="text-center">AKSI</th>
                     <?php endif; ?>
                 </tr>
             </thead>
@@ -63,7 +93,7 @@ $result = mysqli_query($conn, $query);
                             <?php endif; ?>
                         </td>
                         
-                        <!-- Kolom Tombol Edit & Toggle Status HANYA TAMPIL untuk role pengelola -->
+                        <!-- Kolom Tombol Edit, Toggle Status, & Hapus HANYA TAMPIL untuk role pengelola -->
                         <?php if ($can_manage_barang) : ?>
                         <td class="text-center">
                             <div class="d-inline-flex gap-2">
@@ -74,7 +104,7 @@ $result = mysqli_query($conn, $query);
                                 <?php if ($is_aktif) : ?>
                                     <!-- Tombol Non-Aktifkan (mengubah status ke 0) -->
                                     <a href="process.php?action=toggle_status&id=<?= $row['idbarang']; ?>&status=0" 
-                                       class="btn btn-sm btn-outline-danger px-2 fw-semibold" 
+                                       class="btn btn-sm btn-outline-secondary px-2 fw-semibold" 
                                        onclick="return confirm('Sembunyikan barang ini dari form transaksi pengadaan & kasir?')"
                                        title="Non-aktifkan Barang">
                                         <i class="bi bi-eye-slash me-1"></i> Non-Aktifkan
@@ -88,6 +118,14 @@ $result = mysqli_query($conn, $query);
                                         <i class="bi bi-eye me-1"></i> Aktifkan
                                     </a>
                                 <?php endif; ?>
+
+                                <!-- Tombol Hapus Permanen -->
+                                <a href="process.php?action=delete&id=<?= $row['idbarang']; ?>" 
+                                   class="btn btn-sm btn-danger px-2 fw-semibold" 
+                                   onclick="return confirm('Yakin ingin menghapus permanen barang \"<?= htmlspecialchars(addslashes($row['nama_barang'])); ?>\"?')"
+                                   title="Hapus Permanen Barang">
+                                    <i class="bi bi-trash me-1"></i> Hapus
+                                </a>
                             </div>
                         </td>
                         <?php endif; ?>
@@ -95,7 +133,9 @@ $result = mysqli_query($conn, $query);
                     <?php endwhile; ?>
                 <?php else : ?>
                     <tr>
-                        <td colspan="<?= $can_manage_barang ? '7' : '6'; ?>" class="text-center text-secondary py-4">Belum ada data barang.</td>
+                        <td colspan="<?= $can_manage_barang ? '7' : '6'; ?>" class="text-center text-secondary py-4">
+                            Tidak ada data barang untuk kategori filter ini.
+                        </td>
                     </tr>
                 <?php endif; ?>
             </tbody>

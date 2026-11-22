@@ -59,11 +59,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'create
         // CALL SP HEADER PENJUALAN
         $q_h = mysqli_query($conn, "CALL sp_create_header_penjualan($iduser, $idmargin_penjualan, $subtotal_nilai, @idpenjualan)");
         if (!$q_h) throw new Exception("Gagal CALL sp_create_header_penjualan!");
-
+        // membaca id penjualan yang diinput ke header penjualan, untuk lanjut ke detail penjualan
         $res_out = mysqli_query($conn, "SELECT @idpenjualan AS idpenjualan");
+        // ini ambil id penjualan buat lanjut ke detail penjualan
         $idpenjualan = (int)(mysqli_fetch_assoc($res_out)['idpenjualan'] ?? 0);
         while (mysqli_more_results($conn) && mysqli_next_result($conn)) {;}
-
         // CALL SP DETAIL PENJUALAN
         foreach ($items as $item) {
             $q_d = mysqli_query($conn, "CALL sp_add_detail_penjualan($idpenjualan, {$item['idbarang']}, {$item['harga_satuan']}, {$item['jumlah']})");

@@ -32,8 +32,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'create
         // 1. CALL sp_create_header_pengadaan
         $q_h = mysqli_query($conn, "CALL sp_create_header_pengadaan($iduser, $idvendor, $subtotal_header, @idpengadaan)");
         if (!$q_h) throw new Exception("Gagal CALL sp_create_header_pengadaan!");
-        
+        // membaca id pengadaan yang diinput ke header pengadaan, untuk lanjut ke detail pengadaan
         $res_out = mysqli_query($conn, "SELECT @idpengadaan AS idpengadaan");
+        // ini ambil id pengadaan buat lanjut ke detail pengadaan
         $idpengadaan = (int)(mysqli_fetch_assoc($res_out)['idpengadaan'] ?? 0);
         while (mysqli_more_results($conn) && mysqli_next_result($conn)) {;}
 

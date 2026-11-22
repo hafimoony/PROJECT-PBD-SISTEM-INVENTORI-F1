@@ -84,7 +84,7 @@ if ($action == 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-// 4. PROSES DELETE (DAPAT DIGUNAKAN JIKA BELUM ADA RIWAYAT MUTASI STOK)
+// 4. PROSES DELETE (DAPAT DIGUNAKAN JIKA BELUM ADA RIWAYAT TRANSAKSI / MUTASI STOK)
 } elseif ($action == 'delete') {
     $idbarang = (int)($_GET['id'] ?? 0);
 
@@ -93,11 +93,17 @@ if ($action == 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    // Cek di tabel kartu_stok
+    // Cek di tabel kartu_stok, detail_pengadaan, dan detail_penjualan
     $check_stok = mysqli_query($conn, "SELECT idkartu_stok FROM kartu_stok WHERE idbarang = $idbarang LIMIT 1");
+    $check_pgd  = mysqli_query($conn, "SELECT iddetail_pengadaan FROM detail_pengadaan WHERE idbarang = $idbarang LIMIT 1");
+    $check_pjl  = mysqli_query($conn, "SELECT iddetail_penjualan FROM detail_penjualan WHERE idbarang = $idbarang LIMIT 1");
 
-    if ($check_stok && mysqli_num_rows($check_stok) > 0) {
-        echo "<script>alert('Gagal menghapus! Barang ini sudah memiliki riwayat mutasi di kartu stok. Silakan gunakan tombol Non-Aktifkan.'); window.location.href='index.php';</script>";
+    if (
+        ($check_stok && mysqli_num_rows($check_stok) > 0) ||
+        ($check_pgd  && mysqli_num_rows($check_pgd) > 0) ||
+        ($check_pjl  && mysqli_num_rows($check_pjl) > 0)
+    ) {
+        echo "<script>alert('Gagal menghapus! Barang ini sudah memiliki riwayat transaksi atau mutasi di kartu stok. Silakan gunakan tombol Non-Aktifkan.'); window.location.href='index.php';</script>";
         exit();
     }
 
@@ -107,7 +113,7 @@ if ($action == 'create' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if (mysqli_stmt_execute($stmt)) {
             mysqli_stmt_close($stmt);
-            echo "<script>alert('Data barang berhasil dihapus.'); window.location.href='index.php';</script>";
+            echo "<script>alert('Data barang berhasil dihapus permanen.'); window.location.href='index.php';</script>";
             exit();
         }
     } catch (Exception $e) {
